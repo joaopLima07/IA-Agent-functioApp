@@ -1,5 +1,6 @@
 package br.com.aisaas.auth.api;
 
+import br.com.aisaas.auth.application.LoginService;
 import br.com.aisaas.auth.application.RegisterUserCommand;
 import br.com.aisaas.auth.application.RegisterUserService;
 import br.com.aisaas.auth.domain.User;
@@ -29,7 +30,9 @@ class AuthControllerTest {
     @BeforeEach
     void setUp() {
         service = mock(RegisterUserService.class);
-        mvc = MockMvcBuilders.standaloneSetup(new AuthController(service)).build();
+        mvc = MockMvcBuilders.standaloneSetup(new AuthController(service, mock(LoginService.class)))
+                .setControllerAdvice(new AuthControllerAdvice())
+                .build();
     }
 
     private org.springframework.test.web.servlet.ResultActions register(String body) throws Exception {
@@ -54,31 +57,42 @@ class AuthControllerTest {
     }
 
     @Test
-    void returns400WhenPasswordIsWeak() throws Exception {
+    void returns422WhenPasswordIsWeak() throws Exception {
         when(service.createUser(any())).thenThrow(new WeakPasswordException("weak"));
 
-        register(VALID_BODY).andExpect(status().isBadRequest()).andExpect(content().string("weak"));
+        register(VALID_BODY)
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.code").value("WEAK_PASSWORD"))
+                .andExpect(jsonPath("$.mensage").value("weak"));
     }
 
     @Test
-    void returns400WhenPhoneIsInvalid() throws Exception {
+    void returns422WhenPhoneIsInvalid() throws Exception {
         when(service.createUser(any())).thenThrow(new InvalidPhoneNumberException("bad phone"));
 
-        register(VALID_BODY).andExpect(status().isBadRequest()).andExpect(content().string("bad phone"));
+        register(VALID_BODY)
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.code").value("INVALID_PHONE"))
+                .andExpect(jsonPath("$.mensage").value("bad phone"));
     }
 
     @Test
-    void returns400WhenEmailAlreadyRegistered() throws Exception {
+    void returns409WhenEmailAlreadyRegistered() throws Exception {
         when(service.createUser(any())).thenThrow(new EmailAlreadyRegisteredException("taken"));
 
-        register(VALID_BODY).andExpect(status().isBadRequest()).andExpect(content().string("taken"));
+        register(VALID_BODY)
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("EMAIL_ALREADY_REGISTERED"))
+                .andExpect(jsonPath("$.mensage").value("taken"));
     }
 
     @Test
     void returns400WhenEmailFormatIsInvalid() throws Exception {
         register("""
                 {"fullName":"João","email":"not-an-email","password":"Abcdef1!","phone":"(11) 98765-4321"}
-                """).andExpect(status().isBadRequest());
+                """)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
 
         verifyNoInteractions(service);
     }
@@ -87,7 +101,9 @@ class AuthControllerTest {
     void returns400WhenRequiredFieldIsBlank() throws Exception {
         register("""
                 {"fullName":"  ","email":"joao@example.com","password":"Abcdef1!","phone":"(11) 98765-4321"}
-                """).andExpect(status().isBadRequest());
+                """)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
 
         verifyNoInteractions(service);
     }

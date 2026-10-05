@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class PasswordPolicyTest {
 
-    private final PasswordPolicy policy = new PasswordPolicy();
+    private final PasswordPolicy policy = new PasswordPolicy(new BCryptPasswordEncoder());
 
     @Test
     void validPasswordReturnsBcryptHash() {

@@ -1,7 +1,7 @@
 package br.com.aisaas.auth.application;
 
+import br.com.aisaas.auth.domain.User;
 import br.com.aisaas.auth.domain.exceptions.WeakPasswordException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -9,9 +9,13 @@ import java.util.regex.Pattern;
 
 @Component
 public class PasswordPolicy {
+    private final PasswordEncoder passwordEncoder;
+
+    public PasswordPolicy(PasswordEncoder passwordEncoder) {
+        this.passwordEncoder = passwordEncoder;
+    }
 
     public String validPassword(String password){
-        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
         if (password.length() < 8){
             throw new WeakPasswordException("The password is less then 8 caracters");
@@ -37,5 +41,9 @@ public class PasswordPolicy {
 
         return passwordEncoder.encode(password);
 
+    }
+
+    public boolean equalsPassword(User user, String passwordSent){
+        return passwordEncoder.matches(passwordSent, user.getPassword());
     }
 }

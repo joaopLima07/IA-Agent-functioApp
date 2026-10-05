@@ -28,7 +28,7 @@ class RegisterUserServiceTest {
     @BeforeEach
     void setUp() {
         repository = mock(UserRepository.class);
-        service = new RegisterUserService(repository, new PasswordPolicy(), new Sanitizer());
+        service = new RegisterUserService(repository, new PasswordPolicy(new BCryptPasswordEncoder()), new Sanitizer());
     }
 
     private RegisterUserCommand command() {
