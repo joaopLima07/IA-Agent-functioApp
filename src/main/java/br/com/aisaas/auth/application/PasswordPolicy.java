@@ -10,9 +10,16 @@ import java.util.regex.Pattern;
 @Component
 public class PasswordPolicy {
     private final PasswordEncoder passwordEncoder;
+    private final String dummyHash;
 
     public PasswordPolicy(PasswordEncoder passwordEncoder) {
         this.passwordEncoder = passwordEncoder;
+        this.dummyHash = passwordEncoder.encode("dummy-password-for-timing");
+    }
+
+    /** Spends the same time as a real check, so unknown e-mails can't be told apart by response time. */
+    public void burnPasswordCheck(String passwordSent){
+        passwordEncoder.matches(passwordSent, dummyHash);
     }
 
     public String validPassword(String password){

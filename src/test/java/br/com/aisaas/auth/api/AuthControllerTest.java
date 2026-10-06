@@ -1,11 +1,14 @@
 package br.com.aisaas.auth.api;
 
+import br.com.aisaas.auth.api.dto.LoginResponse;
 import br.com.aisaas.auth.application.LoginService;
 import br.com.aisaas.auth.application.RegisterUserCommand;
 import br.com.aisaas.auth.application.RegisterUserService;
 import br.com.aisaas.auth.domain.User;
 import br.com.aisaas.auth.domain.exceptions.EmailAlreadyRegisteredException;
+import br.com.aisaas.auth.domain.exceptions.InvalidCredentialsException;
 import br.com.aisaas.auth.domain.exceptions.InvalidPhoneNumberException;
+import br.com.aisaas.auth.domain.exceptions.UserNotActiveException;
 import br.com.aisaas.auth.domain.exceptions.WeakPasswordException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,13 +27,19 @@ class AuthControllerTest {
             {"fullName":"João Lima","email":"joao@example.com","password":"Abcdef1!","phone":"(11) 98765-4321"}
             """;
 
+    private static final String LOGIN_BODY = """
+            {"email":"joao@example.com","password":"Abcdef1!"}
+            """;
+
     private RegisterUserService service;
+    private LoginService loginService;
     private MockMvc mvc;
 
     @BeforeEach
     void setUp() {
         service = mock(RegisterUserService.class);
-        mvc = MockMvcBuilders.standaloneSetup(new AuthController(service, mock(LoginService.class)))
+        loginService = mock(LoginService.class);
+        mvc = MockMvcBuilders.standaloneSetup(new AuthController(service, loginService))
                 .setControllerAdvice(new AuthControllerAdvice())
                 .build();
     }
@@ -63,7 +72,7 @@ class AuthControllerTest {
         register(VALID_BODY)
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.code").value("WEAK_PASSWORD"))
-                .andExpect(jsonPath("$.mensage").value("weak"));
+                .andExpect(jsonPath("$.message").value("weak"));
     }
 
     @Test
@@ -73,7 +82,7 @@ class AuthControllerTest {
         register(VALID_BODY)
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.code").value("INVALID_PHONE"))
-                .andExpect(jsonPath("$.mensage").value("bad phone"));
+                .andExpect(jsonPath("$.message").value("bad phone"));
     }
 
     @Test
@@ -83,7 +92,7 @@ class AuthControllerTest {
         register(VALID_BODY)
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("EMAIL_ALREADY_REGISTERED"))
-                .andExpect(jsonPath("$.mensage").value("taken"));
+                .andExpect(jsonPath("$.message").value("taken"));
     }
 
     @Test
@@ -106,5 +115,60 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
 
         verifyNoInteractions(service);
+    }
+
+    private org.springframework.test.web.servlet.ResultActions login(String body) throws Exception {
+        return mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON).content(body));
+    }
+
+    @Test
+    void loginReturns200WithTokenAndExpiration() throws Exception {
+        when(loginService.login(any())).thenReturn(new LoginResponse("jwt-token", 900));
+
+        login(LOGIN_BODY)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken").value("jwt-token"))
+                .andExpect(jsonPath("$.expiresIn").value(900));
+    }
+
+    @Test
+    void loginReturns401WhenCredentialsAreInvalid() throws Exception {
+        when(loginService.login(any())).thenThrow(new InvalidCredentialsException("Invalid e-mail or password."));
+
+        login(LOGIN_BODY)
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("INVALID_CREDENTIALS"))
+                .andExpect(jsonPath("$.message").value("Invalid e-mail or password."));
+    }
+
+    @Test
+    void loginReturns403WhenUserIsNotActive() throws Exception {
+        when(loginService.login(any())).thenThrow(new UserNotActiveException("This account is not active."));
+
+        login(LOGIN_BODY)
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("USER_NOT_ACTIVE"));
+    }
+
+    @Test
+    void loginReturns400WhenEmailFormatIsInvalid() throws Exception {
+        login("""
+                {"email":"not-an-email","password":"Abcdef1!"}
+                """)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+
+        verifyNoInteractions(loginService);
+    }
+
+    @Test
+    void loginReturns400WhenPasswordIsBlank() throws Exception {
+        login("""
+                {"email":"joao@example.com","password":" "}
+                """)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+
+        verifyNoInteractions(loginService);
     }
 }

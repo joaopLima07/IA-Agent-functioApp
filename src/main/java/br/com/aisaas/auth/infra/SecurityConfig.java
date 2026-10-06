@@ -23,6 +23,7 @@ import java.nio.charset.StandardCharsets;
 
 @Configuration
 public class SecurityConfig {
+    private static final int MIN_SECRET_BYTES = 32;
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -43,7 +44,13 @@ public class SecurityConfig {
 
     @Bean
     SecretKey key(@Value("${jwt.secret}") String secret){
-        return new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+        byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);
+
+        if (keyBytes.length < MIN_SECRET_BYTES){
+            throw new IllegalStateException("jwt.secret must have at least " + MIN_SECRET_BYTES + " bytes for HS256.");
+        }
+
+        return new SecretKeySpec(keyBytes, "HmacSHA256");
     }
 
     @Bean

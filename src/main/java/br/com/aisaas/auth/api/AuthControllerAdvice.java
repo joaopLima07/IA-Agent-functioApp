@@ -4,6 +4,7 @@ import br.com.aisaas.auth.api.dto.ErrorResponse;
 import br.com.aisaas.auth.domain.exceptions.EmailAlreadyRegisteredException;
 import br.com.aisaas.auth.domain.exceptions.InvalidCredentialsException;
 import br.com.aisaas.auth.domain.exceptions.InvalidPhoneNumberException;
+import br.com.aisaas.auth.domain.exceptions.UserNotActiveException;
 import br.com.aisaas.auth.domain.exceptions.WeakPasswordException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -35,6 +36,11 @@ public class AuthControllerAdvice {
     @ExceptionHandler(InvalidCredentialsException.class)
     public ResponseEntity<ErrorResponse> invalidCredentials(InvalidCredentialsException e){
         return ResponseEntity.status(401).body(new ErrorResponse("INVALID_CREDENTIALS", e.getMessage()));
+    }
+
+    @ExceptionHandler(UserNotActiveException.class)
+    public ResponseEntity<ErrorResponse> userNotActive(UserNotActiveException e){
+        return ResponseEntity.status(403).body(new ErrorResponse("USER_NOT_ACTIVE", e.getMessage()));
     }
 
     @ExceptionHandler(EmailAlreadyRegisteredException.class)
