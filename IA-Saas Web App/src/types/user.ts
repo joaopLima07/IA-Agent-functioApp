@@ -4,10 +4,11 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  phone?: string;
   avatarUrl?: string;
   role: UserRole;
-  organizationId: string;
-  createdAt: string;
+  organizationId?: string;
+  createdAt?: string;
 }
 
 export interface Organization {
@@ -18,12 +19,11 @@ export interface Organization {
 }
 
 /**
- * Auth session shape the future Spring Boot backend will issue.
- * Designed up front for JWT access + refresh token rotation.
+ * Auth session built from the Spring Boot `/api/auth/login` response
+ * (access token only, no refresh token) plus the `/api/auth/me` user.
  */
 export interface AuthSession {
   accessToken: string;
-  refreshToken: string;
   expiresAt: string;
   user: User;
 }

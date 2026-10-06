@@ -1,79 +1,125 @@
-import { mockOrganization, mockUser } from "@/mocks/user";
-import { simulateLatency } from "@/services/config";
-import type { AuthSession } from "@/types";
+import { mockOrganization } from "@/mocks/user";
+import { apiClient } from "@/services/api";
+import { API_CONFIG, simulateLatency } from "@/services/config";
+import { ApiRequestError } from "@/types/api";
+import type { AuthSession, User, UserRole } from "@/types";
 
 /**
- * Mock auth service shaped around the future Spring Security backend:
- * JWT access token + refresh token, with room for OAuth2 and RBAC. Swap
- * the bodies of these methods for real `apiClient` calls once
- * /auth/login, /auth/refresh, /auth/register exist — the interface and
- * every caller (AuthContext, route guards) stay the same.
+ * Auth service backed by the Spring Boot `/api/auth/*` endpoints
+ * (register, login, me). The backend issues only a short-lived access
+ * token — there is no refresh endpoint — so an expired session simply
+ * sends the user back to the login page.
  */
 
 const SESSION_KEY = "auth_session";
+const TOKEN_KEY = "access_token";
 
-function persistSession(session: AuthSession) {
-  localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-  localStorage.setItem("access_token", session.accessToken);
+const authApi = { baseUrl: API_CONFIG.authBaseUrl };
+
+interface LoginResponse {
+  accessToken: string;
+  expiresIn: number;
 }
 
-function buildSession(): AuthSession {
-  const now = Date.now();
+interface MeResponse {
+  id: number;
+  fullName: string;
+  email: string;
+  phone?: string;
+  role: UserRole;
+}
+
+function toUser(me: MeResponse): User {
   return {
-    accessToken: `mock.${btoa(JSON.stringify({ sub: mockUser.id, exp: now + 1000 * 60 * 30 }))}.signature`,
-    refreshToken: `mock-refresh-${now}`,
-    expiresAt: new Date(now + 1000 * 60 * 30).toISOString(),
-    user: mockUser,
+    id: String(me.id),
+    name: me.fullName,
+    email: me.email,
+    phone: me.phone,
+    role: me.role,
   };
 }
 
+function persistSession(session: AuthSession) {
+  localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  localStorage.setItem(TOKEN_KEY, session.accessToken);
+}
+
+function clearSession() {
+  localStorage.removeItem(SESSION_KEY);
+  localStorage.removeItem(TOKEN_KEY);
+}
+
+async function login(email: string, password: string): Promise<AuthSession> {
+  const { accessToken, expiresIn } = await apiClient.post<LoginResponse>(
+    "/login",
+    { email, password },
+    { ...authApi, auth: false },
+  );
+  // /me needs the token, which apiClient reads from storage.
+  localStorage.setItem(TOKEN_KEY, accessToken);
+  try {
+    const me = await apiClient.get<MeResponse>("/me", authApi);
+    const session: AuthSession = {
+      accessToken,
+      expiresAt: new Date(Date.now() + expiresIn * 1000).toISOString(),
+      user: toUser(me),
+    };
+    persistSession(session);
+    return session;
+  } catch (error) {
+    clearSession();
+    throw error;
+  }
+}
+
 export const authService = {
-  async login(email: string, _password: string): Promise<AuthSession> {
-    await simulateLatency(700);
-    const session = buildSession();
-    session.user = { ...mockUser, email: email || mockUser.email };
-    persistSession(session);
-    return session;
+  login,
+
+  /** Registers the user, then signs in (the backend returns no token on register). */
+  async register(name: string, email: string, password: string, phone: string): Promise<AuthSession> {
+    await apiClient.post("/register", { fullName: name, email, password, phone }, { ...authApi, auth: false });
+    return login(email, password);
   },
 
-  async register(name: string, email: string, _password: string): Promise<AuthSession> {
-    await simulateLatency(800);
-    const session = buildSession();
-    session.user = { ...mockUser, name: name || mockUser.name, email: email || mockUser.email };
-    persistSession(session);
-    return session;
-  },
-
+  /** No backend endpoint yet — still mocked. */
   async forgotPassword(_email: string): Promise<{ sent: boolean }> {
     await simulateLatency(700);
     return { sent: true };
   },
 
   async logout(): Promise<void> {
-    await simulateLatency(200);
-    localStorage.removeItem(SESSION_KEY);
-    localStorage.removeItem("access_token");
+    clearSession();
   },
 
-  async refresh(): Promise<AuthSession | null> {
-    const raw = localStorage.getItem(SESSION_KEY);
-    if (!raw) return null;
-    await simulateLatency(200);
-    const session = buildSession();
-    persistSession(session);
-    return session;
+  /** Re-fetches the current user. Returns null (and clears the session) if the token was rejected. */
+  async fetchCurrentUser(): Promise<User | null> {
+    try {
+      return toUser(await apiClient.get<MeResponse>("/me", authApi));
+    } catch (error) {
+      if (error instanceof ApiRequestError && error.status === 401) {
+        clearSession();
+        return null;
+      }
+      throw error;
+    }
   },
 
   getStoredSession(): AuthSession | null {
     const raw = localStorage.getItem(SESSION_KEY);
     if (!raw) return null;
     try {
-      return JSON.parse(raw) as AuthSession;
+      const session = JSON.parse(raw) as AuthSession;
+      if (new Date(session.expiresAt).getTime() <= Date.now()) {
+        clearSession();
+        return null;
+      }
+      return session;
     } catch {
       return null;
     }
   },
 
+  /** No backend endpoint yet — still mocked. */
   getOrganization() {
     return mockOrganization;
   },

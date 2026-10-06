@@ -5,6 +5,7 @@
  * so components never need to change.
  */
 export const API_CONFIG = {
+  authBaseUrl: import.meta.env.VITE_AUTH_API_BASE_URL ?? "/api/auth",
   baseUrl: import.meta.env.VITE_API_BASE_URL ?? "/api/v1",
   sseUrl: import.meta.env.VITE_SSE_URL ?? "/api/v1/stream",
   useMocks: (import.meta.env.VITE_USE_MOCKS ?? "true") === "true",

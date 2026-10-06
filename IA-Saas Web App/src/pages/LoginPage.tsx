@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/features/auth/hooks/useAuth";
+import { ApiRequestError } from "@/types/api";
 import { loginSchema } from "@/features/auth/types/schemas";
 
 export default function LoginPage() {
@@ -34,8 +35,10 @@ export default function LoginPage() {
       await login(result.data.email, result.data.password);
       const from = (location.state as { from?: Location })?.from?.pathname ?? "/";
       navigate(from, { replace: true });
-    } catch {
-      toast.error("Couldn't sign in", { description: "Please check your credentials and try again." });
+    } catch (error) {
+      toast.error("Couldn't sign in", {
+        description: error instanceof ApiRequestError ? error.message : "Please check your credentials and try again.",
+      });
     } finally {
       setIsSubmitting(false);
     }

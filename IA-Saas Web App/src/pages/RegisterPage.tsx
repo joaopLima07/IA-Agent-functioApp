@@ -7,12 +7,13 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/features/auth/hooks/useAuth";
+import { ApiRequestError } from "@/types/api";
 import { registerSchema } from "@/features/auth/types/schemas";
 
 export default function RegisterPage() {
   const { register } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ name: "", email: "", password: "", confirmPassword: "" });
+  const [form, setForm] = useState({ name: "", email: "", phone: "", password: "", confirmPassword: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -31,10 +32,12 @@ export default function RegisterPage() {
     setErrors({});
     setIsSubmitting(true);
     try {
-      await register(result.data.name, result.data.email, result.data.password);
+      await register(result.data.name, result.data.email, result.data.password, result.data.phone);
       navigate("/", { replace: true });
-    } catch {
-      toast.error("Couldn't create your account", { description: "Please try again." });
+    } catch (error) {
+      toast.error("Couldn't create your account", {
+        description: error instanceof ApiRequestError ? error.message : "Please try again.",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -65,6 +68,20 @@ export default function RegisterPage() {
               aria-invalid={!!errors.email}
             />
             {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
+          </div>
+
+          <div className="grid gap-1.5">
+            <Label htmlFor="phone">Phone</Label>
+            <Input
+              id="phone"
+              type="tel"
+              autoComplete="tel"
+              placeholder="+5511999999999"
+              value={form.phone}
+              onChange={setField("phone")}
+              aria-invalid={!!errors.phone}
+            />
+            {errors.phone && <p className="text-xs text-destructive">{errors.phone}</p>}
           </div>
 
           <div className="grid gap-1.5">

@@ -11,6 +11,7 @@ import { ApiRequestError, type ApiError } from "@/types/api";
 
 interface RequestOptions extends RequestInit {
   auth?: boolean;
+  baseUrl?: string;
 }
 
 function getAccessToken(): string | null {
@@ -22,7 +23,7 @@ function getAccessToken(): string | null {
 }
 
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { auth = true, headers, ...rest } = options;
+  const { auth = true, baseUrl = API_CONFIG.baseUrl, headers, ...rest } = options;
 
   const finalHeaders: Record<string, string> = {
     "Content-Type": "application/json",
@@ -34,7 +35,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     if (token) finalHeaders.Authorization = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${API_CONFIG.baseUrl}${path}`, {
+  const response = await fetch(`${baseUrl}${path}`, {
     ...rest,
     headers: finalHeaders,
   });
@@ -42,7 +43,8 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   if (!response.ok) {
     let error: ApiError;
     try {
-      error = await response.json();
+      const body = await response.json();
+      error = { ...body, status: response.status };
     } catch {
       error = { code: "UNKNOWN", message: response.statusText, status: response.status };
     }

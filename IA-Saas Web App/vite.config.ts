@@ -13,5 +13,9 @@ export default defineConfig({
   },
   server: {
     host: true,
+    // The backend has no CORS config, so proxy /api to it in dev.
+    proxy: {
+      '/api': process.env.VITE_PROXY_TARGET ?? 'http://localhost:8080',
+    },
   },
 })

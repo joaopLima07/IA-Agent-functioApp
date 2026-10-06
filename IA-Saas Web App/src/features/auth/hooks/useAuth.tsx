@@ -7,7 +7,7 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
+  register: (name: string, email: string, password: string, phone: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -21,6 +21,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const stored = authService.getStoredSession();
     setSession(stored);
     setIsLoading(false);
+    if (!stored) return;
+    // Validate the stored token against /me; drop the session if the server rejects it.
+    authService
+      .fetchCurrentUser()
+      .then((user) => setSession(user ? { ...stored, user } : null))
+      .catch(() => {});
   }, []);
 
   const login = React.useCallback(async (email: string, password: string) => {
@@ -28,8 +34,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setSession(s);
   }, []);
 
-  const register = React.useCallback(async (name: string, email: string, password: string) => {
-    const s = await authService.register(name, email, password);
+  const register = React.useCallback(async (name: string, email: string, password: string, phone: string) => {
+    const s = await authService.register(name, email, password, phone);
     setSession(s);
   }, []);
 
