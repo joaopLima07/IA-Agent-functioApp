@@ -1,34 +1,40 @@
 package br.com.aisaas.auth.api;
 
 import br.com.aisaas.auth.api.dto.*;
+import br.com.aisaas.auth.application.AuthTokens;
 import br.com.aisaas.auth.application.LoginService;
 import br.com.aisaas.auth.application.RegisterUserCommand;
+import br.com.aisaas.auth.application.RefreshTokenService;
 import br.com.aisaas.auth.application.RegisterUserService;
 import br.com.aisaas.auth.domain.User;
 import br.com.aisaas.auth.domain.UserStatus;
 import br.com.aisaas.auth.domain.exceptions.InvalidCredentialsException;
+import br.com.aisaas.auth.domain.exceptions.InvalidRefreshTokenException;
 import br.com.aisaas.auth.domain.exceptions.UserNotActiveException;
 import br.com.aisaas.auth.infra.UserRepository;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 public class AuthController {
     public final RegisterUserService registerUserService;
     private final LoginService loginService;
     private final UserRepository userRepository;
+    private final RefreshTokenService refreshTokenService;
+    private final RefreshCookieFactory cookieFactory;
 
-    public AuthController(RegisterUserService registerUserService, LoginService loginService, UserRepository userRepository) {
+    public AuthController(RegisterUserService registerUserService, LoginService loginService, UserRepository userRepository,
+                          RefreshTokenService refreshTokenService, RefreshCookieFactory cookieFactory) {
         this.registerUserService = registerUserService;
         this.loginService = loginService;
         this.userRepository = userRepository;
+        this.refreshTokenService = refreshTokenService;
+        this.cookieFactory = cookieFactory;
     }
 
     @PostMapping("/api/auth/register")
@@ -47,7 +53,7 @@ public class AuthController {
 
     @PostMapping("/api/auth/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request){
-        return ResponseEntity.ok(loginService.login(request));
+        return withRefreshCookie(loginService.login(request));
     }
 
     @GetMapping("/api/auth/me")
@@ -68,5 +74,27 @@ public class AuthController {
                 user.getPhone(),
                 user.getRole().name()
         ));
+    }
+
+    @PostMapping("/api/auth/refresh")
+    public ResponseEntity<LoginResponse> refresh(@CookieValue(name = RefreshCookieFactory.COOKIE_NAME, required = false) String refreshToken){
+        if (refreshToken == null || refreshToken.isBlank()) {
+            throw new InvalidRefreshTokenException("Missing refresh token.");
+        }
+        return withRefreshCookie(refreshTokenService.rotate(refreshToken));
+    }
+
+    @PostMapping("/api/auth/logout")
+    public ResponseEntity<Void> logout(@CookieValue(name = RefreshCookieFactory.COOKIE_NAME, required = false) String refreshToken){
+        refreshTokenService.revoke(refreshToken);
+        return ResponseEntity.noContent()
+                .header(HttpHeaders.SET_COOKIE, cookieFactory.clear().toString())
+                .build();
+    }
+
+    private ResponseEntity<LoginResponse> withRefreshCookie(AuthTokens tokens){
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookieFactory.create(tokens.refreshToken()).toString())
+                .body(new LoginResponse(tokens.accessToken(), tokens.expiresIn()));
     }
 }

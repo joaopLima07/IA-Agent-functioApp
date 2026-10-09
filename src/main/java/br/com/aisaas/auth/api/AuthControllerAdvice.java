@@ -4,6 +4,7 @@ import br.com.aisaas.auth.api.dto.ErrorResponse;
 import br.com.aisaas.auth.domain.exceptions.EmailAlreadyRegisteredException;
 import br.com.aisaas.auth.domain.exceptions.InvalidCredentialsException;
 import br.com.aisaas.auth.domain.exceptions.InvalidPhoneNumberException;
+import br.com.aisaas.auth.domain.exceptions.InvalidRefreshTokenException;
 import br.com.aisaas.auth.domain.exceptions.UserNotActiveException;
 import br.com.aisaas.auth.domain.exceptions.WeakPasswordException;
 import org.springframework.http.ResponseEntity;
@@ -46,5 +47,10 @@ public class AuthControllerAdvice {
     @ExceptionHandler(EmailAlreadyRegisteredException.class)
     public ResponseEntity<ErrorResponse> emailAlreadyRegistered(EmailAlreadyRegisteredException e){
         return ResponseEntity.status(409).body(new ErrorResponse("EMAIL_ALREADY_REGISTERED", e.getMessage()));
+    }
+
+    @ExceptionHandler(InvalidRefreshTokenException.class)
+    public ResponseEntity<ErrorResponse> invalidRefreshToken(InvalidRefreshTokenException e){
+        return ResponseEntity.status(401).body(new ErrorResponse("INVALID_REFRESH_TOKEN", e.getMessage()));
     }
 }

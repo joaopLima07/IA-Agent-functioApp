@@ -7,6 +7,7 @@ public class RegisterUserCommand {
     private String password;
     private String phone;
 
+
     public RegisterUserCommand(String fullName, String email, String password, String phone) {
         this.fullName = fullName;
         this.email = email;

@@ -36,9 +36,6 @@ public class User {
     @Column(nullable = false)
     private UserStatus status = UserStatus.ACTIVE;
 
-    @Column(name = "organization_id")
-    private Long organizationId;
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private UserRole role = UserRole.MEMBER;
@@ -96,14 +93,6 @@ public class User {
 
     public void setStatus(UserStatus status) {
         this.status = status;
-    }
-
-    public Long getOrganizationId() {
-        return organizationId;
-    }
-
-    public void setOrganizationId(Long organizationId) {
-        this.organizationId = organizationId;
     }
 
     public UserRole getRole() {

@@ -1,7 +1,6 @@
 package br.com.aisaas.auth.application;
 
 import br.com.aisaas.auth.api.dto.LoginRequest;
-import br.com.aisaas.auth.api.dto.LoginResponse;
 import br.com.aisaas.auth.domain.User;
 import br.com.aisaas.auth.domain.UserStatus;
 import br.com.aisaas.auth.domain.exceptions.InvalidCredentialsException;
@@ -19,15 +18,17 @@ public class LoginService {
     private final Sanitizer sanitizer;
     private final PasswordPolicy passwordPolicy;
     private final JwtTokenService jwtTokenService;
+    private final RefreshTokenService refreshTokenService;
 
-    public LoginService(UserRepository userRepository, Sanitizer sanitizer, PasswordPolicy passwordPolicy, JwtTokenService jwtTokenService) {
+    public LoginService(UserRepository userRepository, Sanitizer sanitizer, PasswordPolicy passwordPolicy, JwtTokenService jwtTokenService, RefreshTokenService refreshTokenService) {
         this.userRepository = userRepository;
         this.sanitizer = sanitizer;
         this.passwordPolicy = passwordPolicy;
         this.jwtTokenService = jwtTokenService;
+        this.refreshTokenService = refreshTokenService;
     }
 
-    public LoginResponse login(LoginRequest loginRequest){
+    public AuthTokens login(LoginRequest loginRequest){
 
         String sanitizedEmail = sanitizer.sanitizeEmail(loginRequest.email());
 
@@ -50,6 +51,8 @@ public class LoginService {
 
         String accessToken = jwtTokenService.generateToken(haveUser.get());
 
-        return new LoginResponse(accessToken, jwtTokenService.getExpirationSeconds());
+        String refreshToken = refreshTokenService.issue(haveUser.get());
+
+        return new AuthTokens(accessToken, jwtTokenService.getExpirationSeconds(), refreshToken);
     }
 }

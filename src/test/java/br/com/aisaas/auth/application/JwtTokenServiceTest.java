@@ -33,17 +33,16 @@ class JwtTokenServiceTest {
         service = new JwtTokenService(new NimbusJwtEncoder(new ImmutableSecret<>(key)), EXPIRATION_SECONDS);
     }
 
-    private User user(Long organizationId) {
+    private User user() {
         User user = new User();
         user.setId(7L);
         user.setRole(UserRole.ADMIN);
-        user.setOrganizationId(organizationId);
         return user;
     }
 
     @Test
     void generatesSignedTokenWithSubjectAndRole() {
-        Jwt jwt = decoder.decode(service.generateToken(user(null)));
+        Jwt jwt = decoder.decode(service.generateToken(user()));
 
         assertEquals("7", jwt.getSubject());
         assertEquals("ADMIN", jwt.getClaimAsString("role"));
@@ -52,25 +51,16 @@ class JwtTokenServiceTest {
 
     @Test
     void expiresAfterConfiguredSeconds() {
-        Jwt jwt = decoder.decode(service.generateToken(user(null)));
+        Jwt jwt = decoder.decode(service.generateToken(user()));
 
         assertEquals(Duration.ofSeconds(EXPIRATION_SECONDS), Duration.between(jwt.getIssuedAt(), jwt.getExpiresAt()));
         assertEquals(EXPIRATION_SECONDS, service.getExpirationSeconds());
     }
 
     @Test
-    void includesOrganizationIdOnlyWhenPresent() {
-        Jwt withOrg = decoder.decode(service.generateToken(user(42L)));
-        Jwt withoutOrg = decoder.decode(service.generateToken(user(null)));
-
-        assertEquals(42L, withOrg.<Long>getClaim("organizationId").longValue());
-        assertFalse(withoutOrg.hasClaim("organizationId"));
-    }
-
-    @Test
     void tokenSignedWithAnotherKeyIsRejected() {
         SecretKey otherKey = new SecretKeySpec("another-secret-with-32-bytes-min!!!".getBytes(StandardCharsets.UTF_8), "HmacSHA256");
-        String token = service.generateToken(user(null));
+        String token = service.generateToken(user());
 
         assertThrows(JwtException.class, () -> NimbusJwtDecoder.withSecretKey(otherKey).build().decode(token));
     }

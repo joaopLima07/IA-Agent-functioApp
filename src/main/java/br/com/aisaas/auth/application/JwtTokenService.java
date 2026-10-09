@@ -34,10 +34,6 @@ public class JwtTokenService {
                 .expiresAt(now.plusSeconds(expirationSeconds))
                 .claim("role", user.getRole().name());
 
-        if (user.getOrganizationId() != null){
-            claims.claim("organizationId", user.getOrganizationId());
-        }
-
         JwsHeader header = JwsHeader.with(MacAlgorithm.HS256).build();
 
         return jwtEncoder.encode(JwtEncoderParameters.from(header, claims.build())).getTokenValue();
