@@ -1,7 +1,6 @@
 package br.com.aisaas.auth.application;
 
 import br.com.aisaas.auth.api.dto.LoginRequest;
-import br.com.aisaas.auth.api.dto.LoginResponse;
 import br.com.aisaas.auth.domain.User;
 import br.com.aisaas.auth.domain.UserStatus;
 import br.com.aisaas.auth.domain.exceptions.InvalidCredentialsException;
@@ -26,6 +25,7 @@ class LoginServiceTest {
     private UserRepository repository;
     private PasswordPolicy passwordPolicy;
     private JwtTokenService jwtTokenService;
+    private RefreshTokenService refreshTokenService;
     private LoginService service;
 
     @BeforeEach
@@ -33,7 +33,8 @@ class LoginServiceTest {
         repository = mock(UserRepository.class);
         passwordPolicy = spy(new PasswordPolicy(encoder));
         jwtTokenService = mock(JwtTokenService.class);
-        service = new LoginService(repository, new Sanitizer(), passwordPolicy, jwtTokenService);
+        refreshTokenService = mock(RefreshTokenService.class);
+        service = new LoginService(repository, new Sanitizer(), passwordPolicy, jwtTokenService, refreshTokenService);
     }
 
     private User user(UserStatus status) {
@@ -46,16 +47,18 @@ class LoginServiceTest {
     }
 
     @Test
-    void returnsTokenAndExpirationWhenCredentialsAreValid() {
+    void returnsTokensAndExpirationWhenCredentialsAreValid() {
         User user = user(UserStatus.ACTIVE);
         when(repository.findByEmail("joao@example.com")).thenReturn(Optional.of(user));
         when(jwtTokenService.generateToken(user)).thenReturn("jwt-token");
         when(jwtTokenService.getExpirationSeconds()).thenReturn(900L);
+        when(refreshTokenService.issue(user)).thenReturn("refresh-token");
 
-        LoginResponse response = service.login(new LoginRequest("  JOAO@Example.com ", PASSWORD));
+        AuthTokens tokens = service.login(new LoginRequest("  JOAO@Example.com ", PASSWORD));
 
-        assertEquals("jwt-token", response.accessToken());
-        assertEquals(900L, response.expiresIn());
+        assertEquals("jwt-token", tokens.accessToken());
+        assertEquals(900L, tokens.expiresIn());
+        assertEquals("refresh-token", tokens.refreshToken());
     }
 
     @Test

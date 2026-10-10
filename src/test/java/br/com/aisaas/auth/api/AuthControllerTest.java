@@ -1,7 +1,8 @@
 package br.com.aisaas.auth.api;
 
-import br.com.aisaas.auth.api.dto.LoginResponse;
+import br.com.aisaas.auth.application.AuthTokens;
 import br.com.aisaas.auth.application.LoginService;
+import br.com.aisaas.auth.application.RefreshTokenService;
 import br.com.aisaas.auth.application.RegisterUserCommand;
 import br.com.aisaas.auth.application.RegisterUserService;
 import br.com.aisaas.auth.domain.User;
@@ -10,11 +11,16 @@ import br.com.aisaas.auth.domain.exceptions.InvalidCredentialsException;
 import br.com.aisaas.auth.domain.exceptions.InvalidPhoneNumberException;
 import br.com.aisaas.auth.domain.exceptions.UserNotActiveException;
 import br.com.aisaas.auth.domain.exceptions.WeakPasswordException;
+import br.com.aisaas.auth.infra.RefreshTokenProperties;
+import br.com.aisaas.auth.infra.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+import java.time.Duration;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -39,7 +45,10 @@ class AuthControllerTest {
     void setUp() {
         service = mock(RegisterUserService.class);
         loginService = mock(LoginService.class);
-        mvc = MockMvcBuilders.standaloneSetup(new AuthController(service, loginService))
+        RefreshCookieFactory cookieFactory = new RefreshCookieFactory(
+                new RefreshTokenProperties(Duration.ofDays(7), true, "Lax", "/api/auth"));
+        mvc = MockMvcBuilders.standaloneSetup(new AuthController(
+                        service, loginService, mock(UserRepository.class), mock(RefreshTokenService.class), cookieFactory))
                 .setControllerAdvice(new AuthControllerAdvice())
                 .build();
     }
@@ -123,12 +132,17 @@ class AuthControllerTest {
 
     @Test
     void loginReturns200WithTokenAndExpiration() throws Exception {
-        when(loginService.login(any())).thenReturn(new LoginResponse("jwt-token", 900));
+        when(loginService.login(any())).thenReturn(new AuthTokens("jwt-token", 900, "refresh-token"));
 
         login(LOGIN_BODY)
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.accessToken").value("jwt-token"))
-                .andExpect(jsonPath("$.expiresIn").value(900));
+                .andExpect(jsonPath("$.expiresIn").value(900))
+                .andExpect(jsonPath("$.refreshToken").doesNotExist())
+                .andExpect(header().string(HttpHeaders.SET_COOKIE,
+                        org.hamcrest.Matchers.allOf(
+                                org.hamcrest.Matchers.containsString("refresh_token=refresh-token"),
+                                org.hamcrest.Matchers.containsString("HttpOnly"))));
     }
 
     @Test
