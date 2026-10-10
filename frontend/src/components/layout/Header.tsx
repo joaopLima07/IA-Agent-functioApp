@@ -16,7 +16,7 @@ export function Header({ onOpenMobileSidebar }: HeaderProps) {
         size="icon"
         className="lg:hidden"
         onClick={onOpenMobileSidebar}
-        aria-label="Open navigation menu"
+        aria-label="Abrir menu de navegação"
       >
         <Menu className="size-5" />
       </Button>

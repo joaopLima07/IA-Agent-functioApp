@@ -30,45 +30,45 @@ export default function SettingsPage() {
   return (
     <div className="h-full overflow-y-auto scrollbar-thin">
       <div className="mx-auto max-w-3xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
-        <PageHeader title="Settings" description="Manage your profile, appearance, and organization preferences." />
+        <PageHeader title="Configurações" description="Gerencie seu perfil, aparência e preferências da organização." />
 
         <Tabs defaultValue="profile">
           <TabsList className="flex-wrap">
-            <TabsTrigger value="profile">Profile</TabsTrigger>
-            <TabsTrigger value="appearance">Appearance</TabsTrigger>
-            <TabsTrigger value="preferences">Preferences</TabsTrigger>
-            <TabsTrigger value="organization">Organization</TabsTrigger>
+            <TabsTrigger value="profile">Perfil</TabsTrigger>
+            <TabsTrigger value="appearance">Aparência</TabsTrigger>
+            <TabsTrigger value="preferences">Preferências</TabsTrigger>
+            <TabsTrigger value="organization">Organização</TabsTrigger>
           </TabsList>
 
           <TabsContent value="profile">
             <Card>
               <CardHeader>
-                <CardTitle>Profile</CardTitle>
-                <CardDescription>Your personal account information.</CardDescription>
+                <CardTitle>Perfil</CardTitle>
+                <CardDescription>Informações da sua conta pessoal.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-5">
                 <div className="flex items-center gap-4">
                   <Avatar className="size-14">
-                    <AvatarFallback className="text-base">{initials(name || "You")}</AvatarFallback>
+                    <AvatarFallback className="text-base">{initials(name || "Você")}</AvatarFallback>
                   </Avatar>
                   <div>
-                    <Button variant="outline" size="sm" onClick={() => toast.info("Avatar upload isn't available in this preview.")}>
-                      Change avatar
+                    <Button variant="outline" size="sm" onClick={() => toast.info("O envio de avatar não está disponível nesta pré-visualização.")}>
+                      Alterar avatar
                     </Button>
-                    <p className="mt-1 text-xs text-muted-foreground">JPG, PNG, or GIF. Max 2MB.</p>
+                    <p className="mt-1 text-xs text-muted-foreground">JPG, PNG ou GIF. Máximo de 2MB.</p>
                   </div>
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="profile-name">Name</Label>
+                  <Label htmlFor="profile-name">Nome</Label>
                   <Input id="profile-name" value={name} onChange={(e) => setName(e.target.value)} />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="profile-email">Email</Label>
+                  <Label htmlFor="profile-email">E-mail</Label>
                   <Input id="profile-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
                 </div>
               </CardContent>
               <CardFooter className="justify-end border-t border-border pt-5">
-                <Button onClick={() => toast.success("Settings saved")}>Save changes</Button>
+                <Button onClick={() => toast.success("Configurações salvas")}>Salvar alterações</Button>
               </CardFooter>
             </Card>
           </TabsContent>
@@ -76,16 +76,16 @@ export default function SettingsPage() {
           <TabsContent value="appearance">
             <Card>
               <CardHeader>
-                <CardTitle>Appearance</CardTitle>
-                <CardDescription>Choose how Northwind AI looks on this device.</CardDescription>
+                <CardTitle>Aparência</CardTitle>
+                <CardDescription>Escolha a aparência do AI Nexus neste dispositivo.</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-3 gap-3">
                   {(
                     [
-                      { value: "light", label: "Light", icon: Sun },
-                      { value: "dark", label: "Dark", icon: Moon },
-                      { value: "system", label: "System", icon: Laptop },
+                      { value: "light", label: "Claro", icon: Sun },
+                      { value: "dark", label: "Escuro", icon: Moon },
+                      { value: "system", label: "Sistema", icon: Laptop },
                     ] as { value: ThemeMode; label: string; icon: typeof Sun }[]
                   ).map(({ value, label, icon: Icon }) => (
                     <button
@@ -114,41 +114,41 @@ export default function SettingsPage() {
           <TabsContent value="preferences">
             <Card>
               <CardHeader>
-                <CardTitle>Preferences</CardTitle>
-                <CardDescription>Control how the platform behaves while you work.</CardDescription>
+                <CardTitle>Preferências</CardTitle>
+                <CardDescription>Controle como a plataforma se comporta enquanto você trabalha.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-1">
                 <div className="flex items-center justify-between py-3">
                   <div>
-                    <p className="text-sm font-medium">Notifications</p>
-                    <p className="text-sm text-muted-foreground">Receive updates about conversations and documents.</p>
+                    <p className="text-sm font-medium">Notificações</p>
+                    <p className="text-sm text-muted-foreground">Receba atualizações sobre conversas e documentos.</p>
                   </div>
                   <Switch
                     checked={preferences.notifications}
                     onCheckedChange={(checked) => setPreferences({ ...preferences, notifications: checked })}
-                    aria-label="Toggle notifications"
+                    aria-label="Ativar ou desativar notificações"
                   />
                 </div>
                 <div className="flex items-center justify-between border-t border-border py-3">
                   <div>
-                    <p className="text-sm font-medium">Sound</p>
-                    <p className="text-sm text-muted-foreground">Play a sound when an agent finishes responding.</p>
+                    <p className="text-sm font-medium">Som</p>
+                    <p className="text-sm text-muted-foreground">Reproduzir um som quando um agente terminar de responder.</p>
                   </div>
                   <Switch
                     checked={preferences.sound}
                     onCheckedChange={(checked) => setPreferences({ ...preferences, sound: checked })}
-                    aria-label="Toggle sound"
+                    aria-label="Ativar ou desativar som"
                   />
                 </div>
                 <div className="flex items-center justify-between border-t border-border py-3">
                   <div>
-                    <p className="text-sm font-medium">AI streaming</p>
-                    <p className="text-sm text-muted-foreground">Stream responses token-by-token instead of all at once.</p>
+                    <p className="text-sm font-medium">Streaming de IA</p>
+                    <p className="text-sm text-muted-foreground">Transmitir respostas token por token em vez de uma só vez.</p>
                   </div>
                   <Switch
                     checked={preferences.aiStreaming}
                     onCheckedChange={(checked) => setPreferences({ ...preferences, aiStreaming: checked })}
-                    aria-label="Toggle AI streaming"
+                    aria-label="Ativar ou desativar streaming de IA"
                   />
                 </div>
               </CardContent>
@@ -158,8 +158,8 @@ export default function SettingsPage() {
           <TabsContent value="organization">
             <Card>
               <CardHeader>
-                <CardTitle>Organization</CardTitle>
-                <CardDescription>Details shared across your organization's workspace.</CardDescription>
+                <CardTitle>Organização</CardTitle>
+                <CardDescription>Detalhes compartilhados no workspace da sua organização.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-5">
                 <div className="flex items-center gap-4">
@@ -167,19 +167,19 @@ export default function SettingsPage() {
                     <AvatarFallback className="rounded-lg text-base">{initials(orgName)}</AvatarFallback>
                   </Avatar>
                   <div>
-                    <Button variant="outline" size="sm" onClick={() => toast.info("Logo upload isn't available in this preview.")}>
-                      Change logo
+                    <Button variant="outline" size="sm" onClick={() => toast.info("O envio de logo não está disponível nesta pré-visualização.")}>
+                      Alterar logo
                     </Button>
-                    <p className="mt-1 text-xs text-muted-foreground">SVG or PNG, square recommended.</p>
+                    <p className="mt-1 text-xs text-muted-foreground">SVG ou PNG, recomendado em formato quadrado.</p>
                   </div>
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="org-name">Company name</Label>
+                  <Label htmlFor="org-name">Nome da empresa</Label>
                   <Input id="org-name" value={orgName} onChange={(e) => setOrgName(e.target.value)} />
                 </div>
               </CardContent>
               <CardFooter className="justify-end border-t border-border pt-5">
-                <Button onClick={() => toast.success("Organization settings saved")}>Save changes</Button>
+                <Button onClick={() => toast.success("Configurações da organização salvas")}>Salvar alterações</Button>
               </CardFooter>
             </Card>
           </TabsContent>

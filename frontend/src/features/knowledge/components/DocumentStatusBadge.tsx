@@ -3,9 +3,9 @@ import { Badge } from "@/components/ui/badge";
 import type { DocumentStatus } from "@/types";
 
 const config: Record<DocumentStatus, { label: string; variant: "success" | "warning" | "destructive" }> = {
-  PROCESSED: { label: "Processed", variant: "success" },
-  PROCESSING: { label: "Processing", variant: "warning" },
-  ERROR: { label: "Error", variant: "destructive" },
+  PROCESSED: { label: "Processado", variant: "success" },
+  PROCESSING: { label: "Processando", variant: "warning" },
+  ERROR: { label: "Erro", variant: "destructive" },
 };
 
 export function DocumentStatusBadge({ status }: { status: DocumentStatus }) {

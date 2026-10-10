@@ -47,12 +47,12 @@ export function MessageInput({ onSend, isStreaming, onStop, placeholder, autoFoc
             variant="ghost"
             size="icon"
             className="shrink-0 text-muted-foreground"
-            aria-label="Attach a file"
+            aria-label="Anexar um arquivo"
           >
             <Paperclip className="size-4" />
           </Button>
         </TooltipTrigger>
-        <TooltipContent>Attach a file (coming soon)</TooltipContent>
+        <TooltipContent>Anexar um arquivo (em breve)</TooltipContent>
       </Tooltip>
 
       <Textarea
@@ -61,15 +61,15 @@ export function MessageInput({ onSend, isStreaming, onStop, placeholder, autoFoc
         onChange={(e) => setValue(e.target.value)}
         onInput={handleInput}
         onKeyDown={handleKeyDown}
-        placeholder={placeholder ?? "Ask something..."}
+        placeholder={placeholder ?? "Pergunte alguma coisa..."}
         rows={1}
         autoFocus={autoFocus}
         className="max-h-48 min-h-9 flex-1 resize-none border-0 bg-transparent px-1 py-1.5 shadow-none focus-visible:ring-0"
-        aria-label="Message"
+        aria-label="Mensagem"
       />
 
       {isStreaming ? (
-        <Button type="button" size="icon" variant="secondary" className="shrink-0" onClick={onStop} aria-label="Stop generating">
+        <Button type="button" size="icon" variant="secondary" className="shrink-0" onClick={onStop} aria-label="Parar geração">
           <Square className="size-3.5 fill-current" />
         </Button>
       ) : (
@@ -79,7 +79,7 @@ export function MessageInput({ onSend, isStreaming, onStop, placeholder, autoFoc
           className={cn("shrink-0 transition-opacity", !value.trim() && "opacity-50")}
           onClick={handleSend}
           disabled={!value.trim()}
-          aria-label="Send message"
+          aria-label="Enviar mensagem"
         >
           <ArrowUp className="size-4" />
         </Button>

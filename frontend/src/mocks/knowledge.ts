@@ -7,7 +7,7 @@ const iso = (d: Date) => d.toISOString();
 export const mockDocuments: KnowledgeDocument[] = [
   {
     id: "doc_1",
-    name: "Cancellation Policy",
+    name: "Política de Cancelamento",
     fileType: "PDF",
     fileSizeBytes: 184_320,
     status: "PROCESSED",
@@ -19,7 +19,7 @@ export const mockDocuments: KnowledgeDocument[] = [
   },
   {
     id: "doc_2",
-    name: "Customer Manual v3",
+    name: "Manual do Cliente v3",
     fileType: "DOCX",
     fileSizeBytes: 2_411_200,
     status: "PROCESSED",
@@ -31,7 +31,7 @@ export const mockDocuments: KnowledgeDocument[] = [
   },
   {
     id: "doc_3",
-    name: "Refund Policy",
+    name: "Política de Reembolso",
     fileType: "PDF",
     fileSizeBytes: 96_400,
     status: "PROCESSING",
@@ -42,19 +42,19 @@ export const mockDocuments: KnowledgeDocument[] = [
   },
   {
     id: "doc_4",
-    name: "FAQ — General",
+    name: "FAQ — Geral",
     fileType: "MD",
     fileSizeBytes: 44_100,
     status: "ERROR",
     uploadedAt: iso(subHours(now, 6)),
     chunkCount: 0,
     uploadedBy: "Marcus Webb",
-    errorMessage: "Unable to parse document: unsupported table structure on page 4.",
+    errorMessage: "Não foi possível processar o documento: estrutura de tabela não suportada na página 4.",
     linkedAgentIds: [],
   },
   {
     id: "doc_5",
-    name: "Enterprise Contract Terms 2026",
+    name: "Termos de Contrato Corporativo 2026",
     fileType: "PDF",
     fileSizeBytes: 1_042_880,
     status: "PROCESSED",
@@ -66,7 +66,7 @@ export const mockDocuments: KnowledgeDocument[] = [
   },
   {
     id: "doc_6",
-    name: "Shipping Guidelines — North America",
+    name: "Diretrizes de Envio — América do Norte",
     fileType: "PDF",
     fileSizeBytes: 512_600,
     status: "PROCESSED",
@@ -78,7 +78,7 @@ export const mockDocuments: KnowledgeDocument[] = [
   },
   {
     id: "doc_7",
-    name: "Troubleshooting Playbook — API Errors",
+    name: "Guia de Solução de Problemas — Erros de API",
     fileType: "MD",
     fileSizeBytes: 78_300,
     status: "PROCESSED",
@@ -90,7 +90,7 @@ export const mockDocuments: KnowledgeDocument[] = [
   },
   {
     id: "doc_8",
-    name: "Warehouse Operations SOP",
+    name: "POP de Operações de Armazém",
     fileType: "DOCX",
     fileSizeBytes: 663_040,
     status: "PROCESSING",
@@ -101,7 +101,7 @@ export const mockDocuments: KnowledgeDocument[] = [
   },
   {
     id: "doc_9",
-    name: "Billing FAQ",
+    name: "FAQ de Faturamento",
     fileType: "CSV",
     fileSizeBytes: 12_800,
     status: "PROCESSED",

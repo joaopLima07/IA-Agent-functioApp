@@ -41,18 +41,18 @@ export function ChatHeader({ conversation }: { conversation: Conversation }) {
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" aria-label="Conversation options">
+          <Button variant="ghost" size="icon" aria-label="Opções da conversa">
             <MoreVertical className="size-4" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onSelect={() => archiveConversation.mutate(conversation.id)}>
             <Archive className="size-4" />
-            Archive conversation
+            Arquivar conversa
           </DropdownMenuItem>
           <DropdownMenuItem variant="destructive" onSelect={() => setConfirmDelete(true)}>
             <Trash2 className="size-4" />
-            Delete conversation
+            Excluir conversa
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -60,14 +60,14 @@ export function ChatHeader({ conversation }: { conversation: Conversation }) {
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete conversation?</AlertDialogTitle>
+            <AlertDialogTitle>Excluir conversa?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete "{conversation.title}" and its message history. This action cannot be
-              undone.
+              Isso excluirá permanentemente "{conversation.title}" e todo o seu histórico de mensagens. Essa ação não
+              pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() => {
@@ -75,7 +75,7 @@ export function ChatHeader({ conversation }: { conversation: Conversation }) {
                 navigate("/");
               }}
             >
-              Delete
+              Excluir
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

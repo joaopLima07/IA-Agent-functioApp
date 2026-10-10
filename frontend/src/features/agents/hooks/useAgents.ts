@@ -27,8 +27,8 @@ export function useUpdateAgent(id: string) {
     onSuccess: (updated) => {
       queryClient.setQueryData(agentKeys.detail(id), updated);
       queryClient.invalidateQueries({ queryKey: agentKeys.all });
-      toast.success("Agent updated");
+      toast.success("Agente atualizado");
     },
-    onError: () => toast.error("Couldn't save changes", { description: "Please try again." }),
+    onError: () => toast.error("Não foi possível salvar as alterações", { description: "Tente novamente." }),
   });
 }

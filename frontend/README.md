@@ -1,4 +1,6 @@
-# Northwind AI — Enterprise AI Agent Platform (Frontend)
+![AI Nexus](src/assets/logo-wordmark.png)
+
+# AI Nexus — Enterprise AI Agent Platform (Frontend)
 
 A production-grade frontend for a B2B SaaS platform where companies configure and converse
 with specialized AI agents. Built with React, TypeScript, Vite, Tailwind CSS, and shadcn/ui.

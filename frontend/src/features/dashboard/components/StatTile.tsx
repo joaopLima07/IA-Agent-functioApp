@@ -27,7 +27,7 @@ export function StatTile({ label, value, delta, icon: Icon }: StatTileProps) {
       >
         {isPositive ? <ArrowUp className="size-3" /> : <ArrowDown className="size-3" />}
         {Math.abs(delta).toFixed(1)}%
-        <span className="font-normal text-muted-foreground">vs. last period</span>
+        <span className="font-normal text-muted-foreground">vs. período anterior</span>
       </p>
     </Card>
   );

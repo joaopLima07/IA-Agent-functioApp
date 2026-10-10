@@ -8,15 +8,15 @@ import {
 } from "@/components/ui/tooltip";
 
 const items = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/agents", label: "Agents", icon: Bot },
-  { to: "/knowledge", label: "Knowledge", icon: BookOpen },
-  { to: "/settings", label: "Settings", icon: Settings },
+  { to: "/dashboard", label: "Painel", icon: LayoutDashboard },
+  { to: "/agents", label: "Agentes", icon: Bot },
+  { to: "/knowledge", label: "Base de Conhecimento", icon: BookOpen },
+  { to: "/settings", label: "Configurações", icon: Settings },
 ];
 
 export function SidebarNav({ collapsed = false }: { collapsed?: boolean }) {
   return (
-    <nav className="flex flex-col gap-0.5 px-2" aria-label="Platform navigation">
+    <nav className="flex flex-col gap-0.5 px-2" aria-label="Navegação da plataforma">
       {items.map(({ to, label, icon: Icon }) => {
         const link = (
           <NavLink

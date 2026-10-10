@@ -23,7 +23,7 @@ export function UserMenu() {
       <DropdownMenuTrigger asChild>
         <button
           className="flex items-center gap-2 rounded-md p-1 pr-2 text-sm transition-colors hover:bg-secondary"
-          aria-label="User menu"
+          aria-label="Menu do usuário"
         >
           <Avatar className="size-7">
             <AvatarFallback>{initials(user.name)}</AvatarFallback>
@@ -39,11 +39,11 @@ export function UserMenu() {
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={() => navigate("/settings")}>
           <UserIcon className="size-4" />
-          Profile
+          Perfil
         </DropdownMenuItem>
         <DropdownMenuItem onSelect={() => navigate("/settings")}>
           <Settings className="size-4" />
-          Settings
+          Configurações
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
@@ -54,7 +54,7 @@ export function UserMenu() {
           }}
         >
           <LogOut className="size-4" />
-          Log out
+          Sair
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

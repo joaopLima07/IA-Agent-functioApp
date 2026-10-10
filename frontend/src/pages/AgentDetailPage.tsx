@@ -37,7 +37,7 @@ export default function AgentDetailPage() {
   }, [agent]);
 
   if (isLoading || !draft) return <PageLoader />;
-  if (isError || !agent) return <ErrorState description="Couldn't load this agent." onRetry={() => refetch()} />;
+  if (isError || !agent) return <ErrorState description="Não foi possível carregar este agente." onRetry={() => refetch()} />;
 
   const isDirty = JSON.stringify(draft) !== JSON.stringify(agent);
 
@@ -50,7 +50,7 @@ export default function AgentDetailPage() {
       <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8">
         <Button variant="ghost" size="sm" className="mb-4 -ml-2 gap-1.5 text-muted-foreground" onClick={() => navigate("/agents")}>
           <ArrowLeft className="size-4" />
-          Back to agents
+          Voltar para agentes
         </Button>
 
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -64,33 +64,33 @@ export default function AgentDetailPage() {
                 <AgentStatusBadge status={draft.status} />
               </div>
               <p className="mt-0.5 text-sm text-muted-foreground">{draft.description}</p>
-              <p className="mt-1 text-xs text-muted-foreground">Last updated {formatDate(draft.updatedAt)}</p>
+              <p className="mt-1 text-xs text-muted-foreground">Última atualização em {formatDate(draft.updatedAt)}</p>
             </div>
           </div>
 
           <Button onClick={handleSave} disabled={!isDirty || updateAgent.isPending} className="shrink-0 gap-1.5">
             <Save className="size-4" />
-            {updateAgent.isPending ? "Saving..." : "Save changes"}
+            {updateAgent.isPending ? "Salvando..." : "Salvar alterações"}
           </Button>
         </div>
 
         <Tabs defaultValue="information" className="mt-6">
           <TabsList className="flex-wrap">
-            <TabsTrigger value="information">Information</TabsTrigger>
-            <TabsTrigger value="model">Model</TabsTrigger>
-            <TabsTrigger value="instructions">Instructions</TabsTrigger>
-            <TabsTrigger value="tools">Tools</TabsTrigger>
-            <TabsTrigger value="knowledge">Knowledge</TabsTrigger>
-            <TabsTrigger value="permissions">Permissions</TabsTrigger>
+            <TabsTrigger value="information">Informações</TabsTrigger>
+            <TabsTrigger value="model">Modelo</TabsTrigger>
+            <TabsTrigger value="instructions">Instruções</TabsTrigger>
+            <TabsTrigger value="tools">Ferramentas</TabsTrigger>
+            <TabsTrigger value="knowledge">Conhecimento</TabsTrigger>
+            <TabsTrigger value="permissions">Permissões</TabsTrigger>
           </TabsList>
 
           <TabsContent value="information" className="space-y-5">
             <div className="grid gap-2">
-              <Label htmlFor="agent-name">Agent name</Label>
+              <Label htmlFor="agent-name">Nome do agente</Label>
               <Input id="agent-name" value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="agent-desc">Description</Label>
+              <Label htmlFor="agent-desc">Descrição</Label>
               <Textarea
                 id="agent-desc"
                 value={draft.description}
@@ -105,9 +105,9 @@ export default function AgentDetailPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ACTIVE">Active</SelectItem>
-                  <SelectItem value="INACTIVE">Inactive</SelectItem>
-                  <SelectItem value="DRAFT">Draft</SelectItem>
+                  <SelectItem value="ACTIVE">Ativo</SelectItem>
+                  <SelectItem value="INACTIVE">Inativo</SelectItem>
+                  <SelectItem value="DRAFT">Rascunho</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -115,7 +115,7 @@ export default function AgentDetailPage() {
 
           <TabsContent value="model" className="space-y-5">
             <div className="grid max-w-xs gap-2">
-              <Label>Provider</Label>
+              <Label>Provedor</Label>
               <Select
                 value={draft.provider}
                 onValueChange={(v) =>
@@ -133,7 +133,7 @@ export default function AgentDetailPage() {
               </Select>
             </div>
             <div className="grid max-w-xs gap-2">
-              <Label>Model</Label>
+              <Label>Modelo</Label>
               <Select value={draft.model} onValueChange={(v) => setDraft({ ...draft, model: v })}>
                 <SelectTrigger>
                   <SelectValue />
@@ -148,7 +148,7 @@ export default function AgentDetailPage() {
               </Select>
             </div>
             <div className="grid max-w-xs gap-2">
-              <Label htmlFor="agent-temp">Temperature</Label>
+              <Label htmlFor="agent-temp">Temperatura</Label>
               <Input
                 id="agent-temp"
                 type="number"
@@ -158,10 +158,10 @@ export default function AgentDetailPage() {
                 value={draft.temperature}
                 onChange={(e) => setDraft({ ...draft, temperature: Number(e.target.value) })}
               />
-              <p className="text-xs text-muted-foreground">Lower values produce more consistent, deterministic responses.</p>
+              <p className="text-xs text-muted-foreground">Valores mais baixos produzem respostas mais consistentes e determinísticas.</p>
             </div>
             <div className="grid max-w-xs gap-2">
-              <Label htmlFor="agent-tokens">Max tokens</Label>
+              <Label htmlFor="agent-tokens">Máximo de tokens</Label>
               <Input
                 id="agent-tokens"
                 type="number"
@@ -173,7 +173,7 @@ export default function AgentDetailPage() {
           </TabsContent>
 
           <TabsContent value="instructions" className="space-y-3">
-            <Label htmlFor="agent-instructions">System instructions</Label>
+            <Label htmlFor="agent-instructions">Instruções do sistema</Label>
             <Textarea
               id="agent-instructions"
               value={draft.instructions}
@@ -182,7 +182,7 @@ export default function AgentDetailPage() {
               className="font-mono text-xs leading-relaxed"
             />
             <p className="text-xs text-muted-foreground">
-              These instructions define the agent's behavior, tone, and boundaries. Changes apply to new conversations only.
+              Essas instruções definem o comportamento, o tom e os limites do agente. As alterações se aplicam somente a novas conversas.
             </p>
           </TabsContent>
 
@@ -204,11 +204,11 @@ export default function AgentDetailPage() {
                       tools: draft.tools.map((t) => (t.id === tool.id ? { ...t, enabled: checked } : t)),
                     })
                   }
-                  aria-label={`Toggle ${tool.name}`}
+                  aria-label={`Ativar ou desativar ${tool.name}`}
                 />
               </div>
             ))}
-            {draft.tools.length === 0 && <p className="text-sm text-muted-foreground">No tools configured.</p>}
+            {draft.tools.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma ferramenta configurada.</p>}
           </TabsContent>
 
           <TabsContent value="knowledge" className="space-y-3">
@@ -218,15 +218,15 @@ export default function AgentDetailPage() {
                   <FileText className="size-4 text-muted-foreground" />
                   <p className="text-sm font-medium">{source.name}</p>
                 </div>
-                <span className="text-xs text-muted-foreground">{source.documentCount} documents</span>
+                <span className="text-xs text-muted-foreground">{source.documentCount} documentos</span>
               </div>
             ))}
             {draft.knowledgeSources.length === 0 && (
-              <p className="text-sm text-muted-foreground">No knowledge sources linked to this agent.</p>
+              <p className="text-sm text-muted-foreground">Nenhuma fonte de conhecimento vinculada a este agente.</p>
             )}
             <Separator />
             <p className="text-xs text-muted-foreground">
-              Manage the underlying documents from the <span className="font-medium text-foreground">Knowledge Base</span> page.
+              Gerencie os documentos subjacentes na página <span className="font-medium text-foreground">Base de Conhecimento</span>.
             </p>
           </TabsContent>
 
@@ -245,7 +245,7 @@ export default function AgentDetailPage() {
                       permissions: draft.permissions.map((p) => (p.id === perm.id ? { ...p, granted: checked } : p)),
                     })
                   }
-                  aria-label={`Toggle ${perm.label}`}
+                  aria-label={`Ativar ou desativar ${perm.label}`}
                 />
               </div>
             ))}

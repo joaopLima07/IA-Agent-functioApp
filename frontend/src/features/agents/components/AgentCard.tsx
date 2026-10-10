@@ -33,14 +33,14 @@ export function AgentCard({ agent }: { agent: Agent }) {
           <div className="flex items-center gap-3">
             <span className="flex items-center gap-1">
               <Wrench className="size-3.5" />
-              {agent.toolCount} tools
+              {agent.toolCount} ferramentas
             </span>
             <span className="flex items-center gap-1">
               <FileText className="size-3.5" />
-              {agent.documentCount} docs
+              {agent.documentCount} documentos
             </span>
           </div>
-          <span>Updated {relativeTime(agent.updatedAt)}</span>
+          <span>Atualizado {relativeTime(agent.updatedAt)}</span>
         </div>
       </Card>
     </Link>

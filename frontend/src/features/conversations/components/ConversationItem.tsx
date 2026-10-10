@@ -32,7 +32,7 @@ export function ConversationItem({ conversation, onDelete, onArchive, onUnarchiv
     >
       <div className="min-w-0 flex-1">
         <p className="truncate font-medium leading-tight">{conversation.title}</p>
-        <p className="truncate text-xs text-muted-foreground">{conversation.lastMessage || "No messages yet"}</p>
+        <p className="truncate text-xs text-muted-foreground">{conversation.lastMessage || "Nenhuma mensagem ainda"}</p>
       </div>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -41,7 +41,7 @@ export function ConversationItem({ conversation, onDelete, onArchive, onUnarchiv
             size="icon-sm"
             className="shrink-0 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 data-[state=open]:opacity-100"
             onClick={(e) => e.preventDefault()}
-            aria-label={`Conversation options for ${conversation.title}`}
+            aria-label={`Opções da conversa ${conversation.title}`}
           >
             <MoreHorizontal className="size-4" />
           </Button>
@@ -55,7 +55,7 @@ export function ConversationItem({ conversation, onDelete, onArchive, onUnarchiv
               }}
             >
               <Archive className="size-4" />
-              Archive
+              Arquivar
             </DropdownMenuItem>
           ) : (
             <DropdownMenuItem
@@ -65,7 +65,7 @@ export function ConversationItem({ conversation, onDelete, onArchive, onUnarchiv
               }}
             >
               <ArchiveRestore className="size-4" />
-              Move to active
+              Mover para ativas
             </DropdownMenuItem>
           )}
           <DropdownMenuItem
@@ -76,7 +76,7 @@ export function ConversationItem({ conversation, onDelete, onArchive, onUnarchiv
             }}
           >
             <Trash2 className="size-4" />
-            Delete
+            Excluir
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

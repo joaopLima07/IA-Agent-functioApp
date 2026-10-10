@@ -49,7 +49,7 @@ export const conversationService = {
     const now = new Date().toISOString();
     const conversation: Conversation = {
       id: `conv_${Date.now()}`,
-      title: "New conversation",
+      title: "Nova conversa",
       lastMessage: "",
       agentId: agent.id,
       agentName: agent.name,
@@ -73,7 +73,7 @@ export const conversationService = {
             lastMessage: message.role === "USER" ? message.content : c.lastMessage,
             updatedAt: message.createdAt,
             messageCount: c.messageCount + 1,
-            title: c.title === "New conversation" && message.role === "USER" ? message.content.slice(0, 60) : c.title,
+            title: c.title === "Nova conversa" && message.role === "USER" ? message.content.slice(0, 60) : c.title,
           }
         : c
     );

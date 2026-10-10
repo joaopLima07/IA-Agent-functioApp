@@ -1,4 +1,4 @@
-package br.com.aisaas.shared;
+package br.com.aisaas.shared.infra;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import org.springframework.beans.factory.annotation.Value;

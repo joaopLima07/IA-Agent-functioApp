@@ -17,9 +17,9 @@ export default function DashboardPage() {
   return (
     <div className="h-full overflow-y-auto scrollbar-thin">
       <div className="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
-        <PageHeader title="Dashboard" description="Platform-wide performance across all agents and conversations." />
+        <PageHeader title="Painel" description="Desempenho da plataforma em todos os agentes e conversas." />
 
-        {isError && <ErrorState description="Couldn't load dashboard metrics." onRetry={() => refetch()} />}
+        {isError && <ErrorState description="Não foi possível carregar as métricas do painel." onRetry={() => refetch()} />}
 
         {isLoading && (
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -33,25 +33,25 @@ export default function DashboardPage() {
           <>
             <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
               <StatTile
-                label="Conversations"
+                label="Conversas"
                 value={formatNumber(data.summary.totalConversations)}
                 delta={data.summary.conversationsDelta}
                 icon={MessageSquare}
               />
               <StatTile
-                label="Messages"
+                label="Mensagens"
                 value={formatNumber(data.summary.totalMessages)}
                 delta={data.summary.messagesDelta}
                 icon={MessagesSquare}
               />
               <StatTile
-                label="Resolution rate"
+                label="Taxa de resolução"
                 value={`${data.summary.resolutionRate}%`}
                 delta={data.summary.resolutionDelta}
                 icon={CheckCircle2}
               />
               <StatTile
-                label="Tokens used"
+                label="Tokens usados"
                 value={formatCompactNumber(data.summary.totalTokens)}
                 delta={data.summary.tokensDelta}
                 icon={Coins}

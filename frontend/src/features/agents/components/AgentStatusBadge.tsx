@@ -2,9 +2,9 @@ import { Badge } from "@/components/ui/badge";
 import type { AgentStatus } from "@/types";
 
 const config: Record<AgentStatus, { label: string; variant: "success" | "secondary" | "warning" }> = {
-  ACTIVE: { label: "Active", variant: "success" },
-  INACTIVE: { label: "Inactive", variant: "secondary" },
-  DRAFT: { label: "Draft", variant: "warning" },
+  ACTIVE: { label: "Ativo", variant: "success" },
+  INACTIVE: { label: "Inativo", variant: "secondary" },
+  DRAFT: { label: "Rascunho", variant: "warning" },
 };
 
 export function AgentStatusBadge({ status }: { status: AgentStatus }) {

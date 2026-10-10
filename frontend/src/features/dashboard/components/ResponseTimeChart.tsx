@@ -6,7 +6,7 @@ import type { ResponseTimePoint } from "@/types";
 
 export function ResponseTimeChart({ data }: { data: ResponseTimePoint[] }) {
   return (
-    <ChartCard title="AI response time" description="Average time to first response, last 7 days">
+    <ChartCard title="Tempo de resposta da IA" description="Tempo médio até a primeira resposta, últimos 7 dias">
       <ResponsiveContainer width="100%" height={240}>
         <LineChart data={data} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
           <CartesianGrid vertical={false} stroke={chartColors.grid} />
@@ -23,7 +23,7 @@ export function ResponseTimeChart({ data }: { data: ResponseTimePoint[] }) {
             isAnimationActive={false}
             type="monotone"
             dataKey="avgSeconds"
-            name="Avg. response time (s)"
+            name="Tempo médio de resposta (s)"
             stroke={chartColors.primary}
             strokeWidth={2}
             dot={{ r: 3, fill: chartColors.primary, strokeWidth: 0 }}

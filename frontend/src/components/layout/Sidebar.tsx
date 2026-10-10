@@ -24,7 +24,7 @@ export function Sidebar({ collapsed, onToggleCollapsed }: SidebarProps) {
     const defaultAgent = mockAgents.find((a) => a.status === "ACTIVE") ?? mockAgents[0];
     createConversation.mutate(defaultAgent.id, {
       onSuccess: (conversation) => navigate(`/c/${conversation.id}`),
-      onError: () => toast.error("Couldn't start a new conversation"),
+      onError: () => toast.error("Não foi possível iniciar uma nova conversa"),
     });
   };
 
@@ -42,7 +42,7 @@ export function Sidebar({ collapsed, onToggleCollapsed }: SidebarProps) {
           size="icon-sm"
           className={cn("ml-auto shrink-0", collapsed && "ml-0")}
           onClick={onToggleCollapsed}
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          aria-label={collapsed ? "Expandir barra lateral" : "Recolher barra lateral"}
         >
           {collapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
         </Button>
@@ -58,12 +58,12 @@ export function Sidebar({ collapsed, onToggleCollapsed }: SidebarProps) {
                 className="w-full"
                 onClick={handleNewConversation}
                 disabled={createConversation.isPending}
-                aria-label="New conversation"
+                aria-label="Nova conversa"
               >
                 <SquarePen className="size-4" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent side="right">New conversation</TooltipContent>
+            <TooltipContent side="right">Nova conversa</TooltipContent>
           </Tooltip>
         ) : (
           <Button
@@ -73,7 +73,7 @@ export function Sidebar({ collapsed, onToggleCollapsed }: SidebarProps) {
             disabled={createConversation.isPending}
           >
             <SquarePen className="size-4" />
-            New conversation
+            Nova conversa
           </Button>
         )}
       </div>

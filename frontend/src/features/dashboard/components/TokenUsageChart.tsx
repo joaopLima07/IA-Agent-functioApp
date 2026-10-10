@@ -7,7 +7,7 @@ import type { TimeSeriesPoint } from "@/types";
 
 export function TokenUsageChart({ data }: { data: TimeSeriesPoint[] }) {
   return (
-    <ChartCard title="Token usage" description="Total tokens consumed per day, last 14 days">
+    <ChartCard title="Uso de tokens" description="Total de tokens consumidos por dia, últimos 14 dias">
       <ResponsiveContainer width="100%" height={240}>
         <LineChart data={data} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
           <CartesianGrid vertical={false} stroke={chartColors.grid} />

@@ -8,10 +8,10 @@ export default function NotFoundPage() {
       <div className="flex size-11 items-center justify-center rounded-xl bg-secondary text-muted-foreground">
         <Compass className="size-5" />
       </div>
-      <h1 className="text-lg font-semibold">Page not found</h1>
-      <p className="max-w-sm text-sm text-muted-foreground">The page you're looking for doesn't exist or may have been moved.</p>
+      <h1 className="text-lg font-semibold">Página não encontrada</h1>
+      <p className="max-w-sm text-sm text-muted-foreground">A página que você está procurando não existe ou pode ter sido movida.</p>
       <Button asChild className="mt-2">
-        <Link to="/">Back to chat</Link>
+        <Link to="/">Voltar ao chat</Link>
       </Button>
     </div>
   );

@@ -31,7 +31,7 @@ export const knowledgeService = {
       status: "PROCESSING",
       uploadedAt: new Date().toISOString(),
       chunkCount: 0,
-      uploadedBy: "You",
+      uploadedBy: "Você",
       linkedAgentIds: [],
     };
     documents = [doc, ...documents];
@@ -48,7 +48,7 @@ export const knowledgeService = {
                 processedAt: new Date().toISOString(),
                 chunkCount: Math.floor(20 + Math.random() * 180),
               }
-            : { ...d, status: "ERROR", errorMessage: "Unable to parse document: unsupported format or corrupted file." }
+            : { ...d, status: "ERROR", errorMessage: "Não foi possível processar o documento: formato não suportado ou arquivo corrompido." }
           : d
       );
     }, 4000 + Math.random() * 2000);

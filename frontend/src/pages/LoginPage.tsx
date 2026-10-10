@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, Lock, Mail } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -36,8 +36,8 @@ export default function LoginPage() {
       const from = (location.state as { from?: Location })?.from?.pathname ?? "/";
       navigate(from, { replace: true });
     } catch (error) {
-      toast.error("Couldn't sign in", {
-        description: error instanceof ApiRequestError ? error.message : "Please check your credentials and try again.",
+      toast.error("Não foi possível entrar", {
+        description: error instanceof ApiRequestError ? error.message : "Verifique suas credenciais e tente novamente.",
       });
     } finally {
       setIsSubmitting(false);
@@ -45,24 +45,29 @@ export default function LoginPage() {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Sign in</CardTitle>
-        <CardDescription>Sign in to your organization's workspace.</CardDescription>
+    <Card className="border-border/60 shadow-lg">
+      <CardHeader className="gap-1.5 pb-2">
+        <CardTitle className="text-xl">Entrar</CardTitle>
+        <CardDescription>Entre no workspace da sua organização.</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4" noValidate>
           <div className="grid gap-1.5">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              aria-invalid={!!errors.email}
-              aria-describedby={errors.email ? "email-error" : undefined}
-            />
+            <Label htmlFor="email">E-mail</Label>
+            <div className="relative">
+              <Mail className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="email"
+                type="email"
+                autoComplete="email"
+                placeholder="you@company.com"
+                className="pl-9"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                aria-invalid={!!errors.email}
+                aria-describedby={errors.email ? "email-error" : undefined}
+              />
+            </div>
             {errors.email && (
               <p id="email-error" className="text-xs text-destructive">
                 {errors.email}
@@ -72,20 +77,24 @@ export default function LoginPage() {
 
           <div className="grid gap-1.5">
             <div className="flex items-center justify-between">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">Senha</Label>
               <Link to="/forgot-password" className="text-xs font-medium text-primary hover:underline">
-                Forgot password?
+                Esqueceu a senha?
               </Link>
             </div>
-            <Input
-              id="password"
-              type="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              aria-invalid={!!errors.password}
-              aria-describedby={errors.password ? "password-error" : undefined}
-            />
+            <div className="relative">
+              <Lock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="password"
+                type="password"
+                autoComplete="current-password"
+                className="pl-9"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                aria-invalid={!!errors.password}
+                aria-describedby={errors.password ? "password-error" : undefined}
+              />
+            </div>
             {errors.password && (
               <p id="password-error" className="text-xs text-destructive">
                 {errors.password}
@@ -95,26 +104,26 @@ export default function LoginPage() {
 
           <Button type="submit" className="w-full" disabled={isSubmitting}>
             {isSubmitting && <Loader2 className="size-4 animate-spin" />}
-            Sign in
+            Entrar
           </Button>
         </form>
 
         <div className="my-5 flex items-center gap-3">
           <Separator className="flex-1" />
-          <span className="text-xs text-muted-foreground">OR</span>
+          <span className="text-xs text-muted-foreground">OU</span>
           <Separator className="flex-1" />
         </div>
 
         <div className="space-y-2">
-          <Button variant="outline" className="w-full" type="button" onClick={() => toast.info("SSO isn't available in this preview.")}>
-            Continue with SSO
+          <Button variant="outline" className="w-full" type="button" onClick={() => toast.info("O SSO não está disponível nesta pré-visualização.")}>
+            Continuar com SSO
           </Button>
         </div>
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
-          Don't have an account?{" "}
+          Não tem uma conta?{" "}
           <Link to="/register" className="font-medium text-primary hover:underline">
-            Create one
+            Criar uma
           </Link>
         </p>
       </CardContent>

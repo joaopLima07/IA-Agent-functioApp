@@ -1,17 +1,18 @@
 import { isToday, isYesterday, format, formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import type { Conversation } from "@/types";
 
 export function conversationDateGroup(dateStr: string): string {
   const date = new Date(dateStr);
-  if (isToday(date)) return "Today";
-  if (isYesterday(date)) return "Yesterday";
+  if (isToday(date)) return "Hoje";
+  if (isYesterday(date)) return "Ontem";
   const daysAgo = Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60 * 24));
-  if (daysAgo < 7) return "Previous 7 days";
-  if (daysAgo < 30) return "Previous 30 days";
-  return format(date, "MMMM yyyy");
+  if (daysAgo < 7) return "Últimos 7 dias";
+  if (daysAgo < 30) return "Últimos 30 dias";
+  return format(date, "MMMM 'de' yyyy", { locale: ptBR });
 }
 
-const GROUP_ORDER = ["Today", "Yesterday", "Previous 7 days", "Previous 30 days"];
+const GROUP_ORDER = ["Hoje", "Ontem", "Últimos 7 dias", "Últimos 30 dias"];
 
 export function groupConversationsByDate(conversations: Conversation[]): [string, Conversation[]][] {
   const groups = new Map<string, Conversation[]>();
@@ -33,13 +34,13 @@ export function groupConversationsByDate(conversations: Conversation[]): [string
 }
 
 export function relativeTime(dateStr: string): string {
-  return formatDistanceToNow(new Date(dateStr), { addSuffix: true });
+  return formatDistanceToNow(new Date(dateStr), { addSuffix: true, locale: ptBR });
 }
 
-export function formatDate(dateStr: string, pattern = "MMM d, yyyy"): string {
-  return format(new Date(dateStr), pattern);
+export function formatDate(dateStr: string, pattern = "d MMM yyyy"): string {
+  return format(new Date(dateStr), pattern, { locale: ptBR });
 }
 
 export function formatDateTime(dateStr: string): string {
-  return format(new Date(dateStr), "MMM d, yyyy 'at' h:mm a");
+  return format(new Date(dateStr), "d MMM yyyy 'às' HH:mm", { locale: ptBR });
 }

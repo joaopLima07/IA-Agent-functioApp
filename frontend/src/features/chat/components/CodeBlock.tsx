@@ -33,10 +33,10 @@ export function CodeBlock({ language, codeText, children }: CodeBlockProps) {
           className={cn(
             "inline-flex items-center gap-1.5 rounded px-1.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
           )}
-          aria-label="Copy code"
+          aria-label="Copiar código"
         >
           {copied ? <Check className="size-3.5 text-success" /> : <Copy className="size-3.5" />}
-          {copied ? "Copied" : "Copy"}
+          {copied ? "Copiado" : "Copiar"}
         </button>
       </div>
       <pre className="hljs overflow-x-auto p-3 text-[13px] leading-relaxed">

@@ -26,7 +26,7 @@ export function MobileSidebar({ open, onOpenChange }: MobileSidebarProps) {
         navigate(`/c/${conversation.id}`);
         onOpenChange(false);
       },
-      onError: () => toast.error("Couldn't start a new conversation"),
+      onError: () => toast.error("Não foi possível iniciar uma nova conversa"),
     });
   };
 
@@ -35,13 +35,13 @@ export function MobileSidebar({ open, onOpenChange }: MobileSidebarProps) {
       <SheetContent side="left" className="flex w-72 flex-col bg-sidebar p-0 text-sidebar-foreground">
         <SheetHeader className="flex-row items-center gap-2 border-b border-sidebar-border">
           <AppLogo />
-          <SheetTitle className="sr-only">Navigation</SheetTitle>
+          <SheetTitle className="sr-only">Navegação</SheetTitle>
         </SheetHeader>
 
         <div className="px-2 pt-2">
           <Button variant="outline" className="w-full justify-start gap-2" onClick={handleNewConversation}>
             <SquarePen className="size-4" />
-            New conversation
+            Nova conversa
           </Button>
         </div>
 

@@ -20,9 +20,9 @@ export function useUploadDocument() {
     mutationFn: (file: { name: string; size: number }) => knowledgeService.upload(file),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: knowledgeKeys.all });
-      toast.success("Document uploaded", { description: "Processing has started." });
+      toast.success("Documento enviado", { description: "O processamento foi iniciado." });
     },
-    onError: () => toast.error("Upload failed", { description: "Please try again." }),
+    onError: () => toast.error("Falha no envio", { description: "Tente novamente." }),
   });
 }
 
@@ -32,7 +32,7 @@ export function useDeleteDocument() {
     mutationFn: (id: string) => knowledgeService.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: knowledgeKeys.all });
-      toast.success("Document deleted");
+      toast.success("Documento excluído");
     },
   });
 }
@@ -43,7 +43,7 @@ export function useReprocessDocument() {
     mutationFn: (id: string) => knowledgeService.reprocess(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: knowledgeKeys.all });
-      toast.success("Reprocessing started");
+      toast.success("Reprocessamento iniciado");
     },
   });
 }

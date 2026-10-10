@@ -1,3 +1,3 @@
-package br.com.aisaas.auth.api.dto;
+package br.com.aisaas.shared.api.dto;
 
 public record ErrorResponse(String code, String message) {}

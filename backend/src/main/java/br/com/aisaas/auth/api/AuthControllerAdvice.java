@@ -1,6 +1,6 @@
 package br.com.aisaas.auth.api;
 
-import br.com.aisaas.auth.api.dto.ErrorResponse;
+import br.com.aisaas.shared.api.dto.ErrorResponse;
 import br.com.aisaas.auth.domain.exceptions.EmailAlreadyRegisteredException;
 import br.com.aisaas.auth.domain.exceptions.InvalidCredentialsException;
 import br.com.aisaas.auth.domain.exceptions.InvalidPhoneNumberException;

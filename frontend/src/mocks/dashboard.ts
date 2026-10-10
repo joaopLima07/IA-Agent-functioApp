@@ -1,4 +1,5 @@
 import { subDays, format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import type { DashboardData } from "@/types";
 
 const now = new Date();
@@ -19,27 +20,27 @@ export const mockDashboardData: DashboardData = {
     tokensDelta: 12.1,
   },
   conversationsOverTime: lastNDays(14).map((d, i) => ({
-    date: format(d, "MMM d"),
+    date: format(d, "MMM d", { locale: ptBR }),
     value: Math.round(60 + Math.sin(i / 2) * 18 + i * 2.4 + (i % 4 === 0 ? 12 : 0)),
   })),
   agentUsage: [
-    { agentName: "Customer Support", conversations: 512 },
-    { agentName: "Technical Support", conversations: 341 },
-    { agentName: "Order Management", conversations: 218 },
-    { agentName: "Finance Assistant", conversations: 156 },
-    { agentName: "Invoice Assistant", conversations: 57 },
+    { agentName: "Suporte ao Cliente", conversations: 512 },
+    { agentName: "Suporte Técnico", conversations: 341 },
+    { agentName: "Gestão de Pedidos", conversations: 218 },
+    { agentName: "Assistente Financeiro", conversations: 156 },
+    { agentName: "Assistente de Faturas", conversations: 57 },
   ],
   toolOutcomes: lastNDays(7).map((d, i) => ({
-    date: format(d, "EEE"),
+    date: format(d, "EEE", { locale: ptBR }),
     success: Math.round(140 + i * 6),
     failed: Math.round(8 + (i % 3)),
   })),
   tokenUsage: lastNDays(14).map((d, i) => ({
-    date: format(d, "MMM d"),
+    date: format(d, "MMM d", { locale: ptBR }),
     value: Math.round(65000 + i * 3200 + Math.cos(i / 3) * 8000),
   })),
   responseTime: lastNDays(7).map((d, i) => ({
-    date: format(d, "EEE"),
+    date: format(d, "EEE", { locale: ptBR }),
     avgSeconds: Number((1.8 + Math.sin(i) * 0.4 + 0.05 * i).toFixed(2)),
   })),
 };

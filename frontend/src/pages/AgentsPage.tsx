@@ -39,8 +39,8 @@ export default function AgentsPage() {
     <div className="h-full overflow-y-auto scrollbar-thin">
       <div className="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
         <PageHeader
-          title="AI Agents"
-          description="Manage the specialized agents available to your organization."
+          title="Agentes de IA"
+          description="Gerencie os agentes especializados disponíveis para sua organização."
         />
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -49,9 +49,9 @@ export default function AgentsPage() {
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search agents"
+              placeholder="Pesquisar agentes"
               className="pl-8"
-              aria-label="Search agents"
+              aria-label="Pesquisar agentes"
             />
           </div>
           <div className="flex items-center gap-1 self-end rounded-md border border-border p-0.5">
@@ -59,7 +59,7 @@ export default function AgentsPage() {
               variant={view === "grid" ? "secondary" : "ghost"}
               size="icon-sm"
               onClick={() => setView("grid")}
-              aria-label="Grid view"
+              aria-label="Visualização em grade"
             >
               <LayoutGrid className="size-4" />
             </Button>
@@ -67,7 +67,7 @@ export default function AgentsPage() {
               variant={view === "table" ? "secondary" : "ghost"}
               size="icon-sm"
               onClick={() => setView("table")}
-              aria-label="Table view"
+              aria-label="Visualização em tabela"
             >
               <Rows3 className="size-4" />
             </Button>
@@ -82,10 +82,10 @@ export default function AgentsPage() {
           </div>
         )}
 
-        {isError && <ErrorState description="Couldn't load agents." onRetry={() => refetch()} />}
+        {isError && <ErrorState description="Não foi possível carregar os agentes." onRetry={() => refetch()} />}
 
         {!isLoading && !isError && filtered.length === 0 && (
-          <EmptyState icon={Bot} title="No agents found" description="Try a different search term." />
+          <EmptyState icon={Bot} title="Nenhum agente encontrado" description="Tente um termo de pesquisa diferente." />
         )}
 
         {!isLoading && !isError && filtered.length > 0 && view === "grid" && (
@@ -101,12 +101,12 @@ export default function AgentsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Agent</TableHead>
+                  <TableHead>Agente</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Model</TableHead>
-                  <TableHead>Tools</TableHead>
-                  <TableHead>Knowledge</TableHead>
-                  <TableHead>Updated</TableHead>
+                  <TableHead>Modelo</TableHead>
+                  <TableHead>Ferramentas</TableHead>
+                  <TableHead>Conhecimento</TableHead>
+                  <TableHead>Atualizado</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

@@ -13,21 +13,21 @@ import { Badge } from "@/components/ui/badge";
 const notifications = [
   {
     id: "n1",
-    title: "Document processing failed",
-    description: "\"FAQ\" could not be processed. Review the file and re-upload.",
-    time: "6h ago",
+    title: "Falha no processamento do documento",
+    description: "\"FAQ\" não pôde ser processado. Revise o arquivo e envie-o novamente.",
+    time: "há 6h",
   },
   {
     id: "n2",
-    title: "New agent published",
-    description: "Order Management is now active for your organization.",
-    time: "1d ago",
+    title: "Novo agente publicado",
+    description: "Order Management agora está ativo para sua organização.",
+    time: "há 1d",
   },
   {
     id: "n3",
-    title: "Weekly usage summary",
-    description: "1,284 conversations handled this week, up 8.2%.",
-    time: "2d ago",
+    title: "Resumo semanal de uso",
+    description: "1.284 conversas atendidas esta semana, um aumento de 8,2%.",
+    time: "há 2d",
   },
 ];
 
@@ -35,15 +35,15 @@ export function NotificationsMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative" aria-label="Notifications">
+        <Button variant="ghost" size="icon" className="relative" aria-label="Notificações">
           <Bell className="size-4" />
           <span className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-primary" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80">
         <DropdownMenuLabel className="flex items-center justify-between text-foreground">
-          Notifications
-          <Badge variant="secondary">{notifications.length} new</Badge>
+          Notificações
+          <Badge variant="secondary">{notifications.length} novas</Badge>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         {notifications.map((n) => (

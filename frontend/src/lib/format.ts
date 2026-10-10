@@ -7,11 +7,11 @@ export function formatBytes(bytes: number): string {
 }
 
 export function formatCompactNumber(value: number): string {
-  return new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 }).format(value);
+  return new Intl.NumberFormat("pt-BR", { notation: "compact", maximumFractionDigits: 1 }).format(value);
 }
 
 export function formatNumber(value: number): string {
-  return new Intl.NumberFormat("en-US").format(value);
+  return new Intl.NumberFormat("pt-BR").format(value);
 }
 
 export function initials(name: string): string {

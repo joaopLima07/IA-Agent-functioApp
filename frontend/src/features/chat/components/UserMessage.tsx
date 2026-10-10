@@ -12,7 +12,7 @@ export function UserMessage({ message }: { message: Message }) {
         <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
       </div>
       <Avatar className="mt-0.5 size-7 shrink-0">
-        <AvatarFallback className="bg-secondary text-[11px]">{initials(user?.name ?? "You")}</AvatarFallback>
+        <AvatarFallback className="bg-secondary text-[11px]">{initials(user?.name ?? "Você")}</AvatarFallback>
       </Avatar>
     </div>
   );

@@ -55,8 +55,8 @@ export default function KnowledgePage() {
     <div className="h-full overflow-y-auto scrollbar-thin">
       <div className="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
         <PageHeader
-          title="Knowledge Base"
-          description="Documents used by your agents for retrieval-augmented answers."
+          title="Base de Conhecimento"
+          description="Documentos usados pelos seus agentes para respostas com recuperação aumentada."
           actions={<UploadDocumentDialog />}
         />
 
@@ -65,9 +65,9 @@ export default function KnowledgePage() {
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search documents"
+            placeholder="Pesquisar documentos"
             className="pl-8"
-            aria-label="Search documents"
+            aria-label="Pesquisar documentos"
           />
         </div>
 
@@ -79,13 +79,13 @@ export default function KnowledgePage() {
           </div>
         )}
 
-        {isError && <ErrorState description="Couldn't load your knowledge base." onRetry={() => refetch()} />}
+        {isError && <ErrorState description="Não foi possível carregar sua base de conhecimento." onRetry={() => refetch()} />}
 
         {!isLoading && !isError && filtered.length === 0 && (
           <EmptyState
             icon={FileText}
-            title="No documents yet"
-            description="Upload policy docs, manuals, or FAQs so your agents can answer from them."
+            title="Nenhum documento ainda"
+            description="Envie políticas, manuais ou FAQs para que seus agentes possam responder com base neles."
           />
         )}
 
@@ -94,12 +94,12 @@ export default function KnowledgePage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Document</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Size</TableHead>
+                  <TableHead>Documento</TableHead>
+                  <TableHead>Tipo</TableHead>
+                  <TableHead>Tamanho</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Chunks</TableHead>
-                  <TableHead>Uploaded</TableHead>
+                  <TableHead>Blocos</TableHead>
+                  <TableHead>Enviado em</TableHead>
                   <TableHead className="w-10" />
                 </TableRow>
               </TableHeader>
@@ -127,7 +127,7 @@ export default function KnowledgePage() {
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon-sm" aria-label={`Options for ${doc.name}`}>
+                          <Button variant="ghost" size="icon-sm" aria-label={`Opções para ${doc.name}`}>
                             <MoreHorizontal className="size-4" />
                           </Button>
                         </DropdownMenuTrigger>
@@ -135,12 +135,12 @@ export default function KnowledgePage() {
                           {doc.status === "ERROR" && (
                             <DropdownMenuItem onSelect={() => reprocessDocument.mutate(doc.id)}>
                               <RotateCw className="size-4" />
-                              Retry processing
+                              Tentar novamente o processamento
                             </DropdownMenuItem>
                           )}
                           <DropdownMenuItem variant="destructive" onSelect={() => setPendingDelete(doc)}>
                             <Trash2 className="size-4" />
-                            Delete
+                            Excluir
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -156,14 +156,14 @@ export default function KnowledgePage() {
       <AlertDialog open={!!pendingDelete} onOpenChange={(open) => !open && setPendingDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete document?</AlertDialogTitle>
+            <AlertDialogTitle>Excluir documento?</AlertDialogTitle>
             <AlertDialogDescription>
-              "{pendingDelete?.name}" will be removed from the knowledge base and any agents referencing it. This
-              action cannot be undone.
+              "{pendingDelete?.name}" será removido da base de conhecimento e de quaisquer agentes que o referenciem.
+              Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() => {
@@ -171,7 +171,7 @@ export default function KnowledgePage() {
                 setPendingDelete(null);
               }}
             >
-              Delete
+              Excluir
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

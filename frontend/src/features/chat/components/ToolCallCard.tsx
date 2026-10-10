@@ -27,19 +27,19 @@ const statusConfig = {
   RUNNING: {
     icon: Loader2,
     iconClassName: "animate-spin text-primary",
-    label: "Running",
+    label: "Em execução",
     badgeClassName: "text-primary",
   },
   SUCCESS: {
     icon: CircleCheck,
     iconClassName: "text-success",
-    label: "Completed",
+    label: "Concluído",
     badgeClassName: "text-success",
   },
   ERROR: {
     icon: CircleX,
     iconClassName: "text-destructive",
-    label: "Failed",
+    label: "Falhou",
     badgeClassName: "text-destructive",
   },
 } as const;
@@ -75,7 +75,7 @@ export function ToolCallCard({ toolCall }: { toolCall: ToolCall }) {
         <div className="space-y-3 border-t border-border bg-secondary/20 px-3 py-3 text-xs">
           {parameters && Object.keys(parameters).length > 0 && (
             <div>
-              <p className="mb-1 font-medium uppercase tracking-wide text-muted-foreground">Parameters</p>
+              <p className="mb-1 font-medium uppercase tracking-wide text-muted-foreground">Parâmetros</p>
               <dl className="space-y-0.5 font-mono">
                 {Object.entries(parameters).map(([key, value]) => (
                   <div key={key} className="flex gap-1.5">
@@ -89,7 +89,7 @@ export function ToolCallCard({ toolCall }: { toolCall: ToolCall }) {
 
           {toolCall.status === "SUCCESS" && result !== undefined && (
             <div>
-              <p className="mb-1 font-medium uppercase tracking-wide text-muted-foreground">Result</p>
+              <p className="mb-1 font-medium uppercase tracking-wide text-muted-foreground">Resultado</p>
               <pre className="overflow-x-auto whitespace-pre-wrap break-words rounded bg-secondary/60 p-2 font-mono">
                 {formatValue(result)}
               </pre>
@@ -98,14 +98,14 @@ export function ToolCallCard({ toolCall }: { toolCall: ToolCall }) {
 
           {toolCall.status === "ERROR" && toolCall.errorMessage && (
             <div>
-              <p className="mb-1 font-medium uppercase tracking-wide text-destructive">Error</p>
+              <p className="mb-1 font-medium uppercase tracking-wide text-destructive">Erro</p>
               <p className="text-destructive">{toolCall.errorMessage}</p>
             </div>
           )}
 
           {toolCall.executionTimeMs !== undefined && (
             <div>
-              <p className="mb-1 font-medium uppercase tracking-wide text-muted-foreground">Execution time</p>
+              <p className="mb-1 font-medium uppercase tracking-wide text-muted-foreground">Tempo de execução</p>
               <p>{(toolCall.executionTimeMs / 1000).toFixed(2)}s</p>
             </div>
           )}

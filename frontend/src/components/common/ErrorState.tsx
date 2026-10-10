@@ -7,7 +7,7 @@ interface ErrorStateProps {
   onRetry?: () => void;
 }
 
-export function ErrorState({ title = "Something went wrong", description, onRetry }: ErrorStateProps) {
+export function ErrorState({ title = "Algo deu errado", description, onRetry }: ErrorStateProps) {
   return (
     <div className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-destructive/30 bg-destructive/5 py-16 text-center">
       <div className="mb-1 flex size-10 items-center justify-center rounded-full bg-destructive/10 text-destructive">
@@ -17,7 +17,7 @@ export function ErrorState({ title = "Something went wrong", description, onRetr
       {description && <p className="max-w-sm text-sm text-muted-foreground">{description}</p>}
       {onRetry && (
         <Button variant="outline" size="sm" className="mt-2" onClick={onRetry}>
-          Retry
+          Tentar novamente
         </Button>
       )}
     </div>

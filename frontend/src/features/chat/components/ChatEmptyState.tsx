@@ -6,10 +6,10 @@ interface ChatEmptyStateProps {
 }
 
 const suggestions = [
-  "Check order #49281",
-  "Check customer account status",
-  "Generate invoice #18372",
-  "Open a support ticket",
+  "Verificar pedido #49281",
+  "Verificar status da conta do cliente",
+  "Gerar fatura #18372",
+  "Abrir um chamado de suporte",
 ];
 
 export function ChatEmptyState({ onSend }: ChatEmptyStateProps) {
@@ -19,8 +19,8 @@ export function ChatEmptyState({ onSend }: ChatEmptyStateProps) {
         <div className="mb-4 flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
           <Sparkles className="size-5" />
         </div>
-        <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">How can I help?</h1>
-        <p className="mt-1.5 text-sm text-muted-foreground">Interact with your AI agents</p>
+        <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">Como posso ajudar?</h1>
+        <p className="mt-1.5 text-sm text-muted-foreground">Interaja com seus agentes de IA</p>
 
         <div className="mt-6 w-full">
           <MessageInput onSend={onSend} isStreaming={false} onStop={() => {}} autoFocus />

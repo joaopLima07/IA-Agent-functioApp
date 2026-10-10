@@ -45,9 +45,9 @@ export function ConversationList() {
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search conversations"
+            placeholder="Pesquisar conversas"
             className="h-8 border-transparent bg-sidebar-accent/50 pl-8 text-xs shadow-none focus-visible:border-input"
-            aria-label="Search conversations"
+            aria-label="Pesquisar conversas"
           />
         </div>
       </div>
@@ -63,9 +63,9 @@ export function ConversationList() {
 
         {isError && (
           <div className="px-1 py-4 text-center text-xs text-muted-foreground">
-            <p className="mb-2">Couldn't load conversations.</p>
+            <p className="mb-2">Não foi possível carregar as conversas.</p>
             <Button variant="outline" size="sm" onClick={() => refetch()}>
-              Retry
+              Tentar novamente
             </Button>
           </div>
         )}
@@ -74,7 +74,7 @@ export function ConversationList() {
           <div className="flex flex-col items-center gap-2 px-2 py-10 text-center">
             <MessageSquare className="size-5 text-muted-foreground" />
             <p className="text-xs text-muted-foreground">
-              {query ? "No conversations match your search." : "No conversations yet."}
+              {query ? "Nenhuma conversa encontrada para sua pesquisa." : "Nenhuma conversa ainda."}
             </p>
           </div>
         )}
@@ -104,14 +104,14 @@ export function ConversationList() {
       <AlertDialog open={!!pendingDelete} onOpenChange={(open) => !open && setPendingDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete conversation?</AlertDialogTitle>
+            <AlertDialogTitle>Excluir conversa?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete "{pendingDelete?.title}" and its message history. This action cannot be
-              undone.
+              Isso excluirá permanentemente "{pendingDelete?.title}" e todo o histórico de mensagens. Esta ação não
+              pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() => {
@@ -119,7 +119,7 @@ export function ConversationList() {
                 setPendingDelete(null);
               }}
             >
-              Delete
+              Excluir
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

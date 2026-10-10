@@ -6,8 +6,8 @@
  * both light and dark card surfaces.
  */
 export const chartColors = {
-  primary: "#4f46e5",
-  primaryMuted: "#a5b4fc",
+  primary: "#ca8a04",
+  primaryMuted: "#fcd34d",
   success: "#16a34a",
   destructive: "#dc2626",
   grid: "var(--border)",

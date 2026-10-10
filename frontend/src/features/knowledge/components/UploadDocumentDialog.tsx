@@ -39,14 +39,14 @@ export function UploadDocumentDialog() {
       <DialogTrigger asChild>
         <Button className="gap-1.5">
           <Upload className="size-4" />
-          Add document
+          Adicionar documento
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add documents</DialogTitle>
+          <DialogTitle>Adicionar documentos</DialogTitle>
           <DialogDescription>
-            Upload files to your knowledge base. They'll be chunked and indexed for retrieval automatically.
+            Envie arquivos para sua base de conhecimento. Eles serão fragmentados e indexados automaticamente para recuperação.
           </DialogDescription>
         </DialogHeader>
 
@@ -68,12 +68,12 @@ export function UploadDocumentDialog() {
         >
           <FileUp className="size-6 text-muted-foreground" />
           <p className="text-sm text-muted-foreground">
-            Drag and drop files here, or{" "}
+            Arraste e solte arquivos aqui, ou{" "}
             <button type="button" className="font-medium text-primary underline underline-offset-2" onClick={() => inputRef.current?.click()}>
-              browse
+              procure
             </button>
           </p>
-          <p className="text-xs text-muted-foreground">PDF, DOCX, TXT, MD, CSV up to 25MB</p>
+          <p className="text-xs text-muted-foreground">PDF, DOCX, TXT, MD, CSV até 25MB</p>
           <input
             ref={inputRef}
             type="file"
@@ -96,7 +96,7 @@ export function UploadDocumentDialog() {
                   variant="ghost"
                   size="icon-sm"
                   onClick={() => setFiles((prev) => prev.filter((_, idx) => idx !== i))}
-                  aria-label={`Remove ${file.name}`}
+                  aria-label={`Remover ${file.name}`}
                 >
                   <X className="size-3.5" />
                 </Button>
@@ -107,10 +107,10 @@ export function UploadDocumentDialog() {
 
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>
-            Cancel
+            Cancelar
           </Button>
           <Button onClick={handleUpload} disabled={files.length === 0 || upload.isPending}>
-            {upload.isPending ? "Uploading..." : `Upload ${files.length || ""}`.trim()}
+            {upload.isPending ? "Enviando..." : `Enviar ${files.length || ""}`.trim()}
           </Button>
         </DialogFooter>
       </DialogContent>

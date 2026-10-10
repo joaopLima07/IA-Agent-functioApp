@@ -1,4 +1,4 @@
-package br.com.aisaas.agent.controller.dto;
+package br.com.aisaas.agent.api.dto;
 
 import br.com.aisaas.agent.domain.AgentStatus;
 import br.com.aisaas.agent.domain.AgentVisibility;

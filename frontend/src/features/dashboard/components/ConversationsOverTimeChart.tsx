@@ -6,7 +6,7 @@ import type { TimeSeriesPoint } from "@/types";
 
 export function ConversationsOverTimeChart({ data }: { data: TimeSeriesPoint[] }) {
   return (
-    <ChartCard title="Conversations over time" description="Daily conversation volume, last 14 days">
+    <ChartCard title="Conversas ao longo do tempo" description="Volume diário de conversas, últimos 14 dias">
       <ResponsiveContainer width="100%" height={240}>
         <AreaChart data={data} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
           <defs>
@@ -29,7 +29,7 @@ export function ConversationsOverTimeChart({ data }: { data: TimeSeriesPoint[] }
             isAnimationActive={false}
             type="monotone"
             dataKey="value"
-            name="Conversations"
+            name="Conversas"
             stroke={chartColors.primary}
             strokeWidth={2}
             fill="url(#conversationsFill)"

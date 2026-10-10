@@ -25,7 +25,7 @@ export const agentService = {
       }
       return a;
     });
-    if (!updated) throw new Error("Agent not found");
+    if (!updated) throw new Error("Agente não encontrado");
     return updated;
   },
 };

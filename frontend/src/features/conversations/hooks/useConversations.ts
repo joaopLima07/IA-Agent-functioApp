@@ -41,9 +41,9 @@ export function useDeleteConversation() {
     mutationFn: (id: string) => conversationService.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: conversationKeys.all });
-      toast.success("Conversation deleted");
+      toast.success("Conversa excluída");
     },
-    onError: () => toast.error("Couldn't delete conversation", { description: "Please try again." }),
+    onError: () => toast.error("Não foi possível excluir a conversa", { description: "Tente novamente." }),
   });
 }
 
@@ -53,9 +53,9 @@ export function useArchiveConversation() {
     mutationFn: (id: string) => conversationService.archive(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: conversationKeys.all });
-      toast.success("Conversation archived");
+      toast.success("Conversa arquivada");
     },
-    onError: () => toast.error("Couldn't archive conversation", { description: "Please try again." }),
+    onError: () => toast.error("Não foi possível arquivar a conversa", { description: "Tente novamente." }),
   });
 }
 
@@ -65,7 +65,7 @@ export function useUnarchiveConversation() {
     mutationFn: (id: string) => conversationService.unarchive(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: conversationKeys.all });
-      toast.success("Conversation moved to active");
+      toast.success("Conversa movida para ativas");
     },
   });
 }

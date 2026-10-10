@@ -41,7 +41,7 @@ export default function ChatPage() {
       onSuccess: (newConversation) => {
         navigate(`/c/${newConversation.id}`, { state: { initialMessage: content } });
       },
-      onError: () => toast.error("Couldn't start a new conversation"),
+      onError: () => toast.error("Não foi possível iniciar uma nova conversa"),
     });
   };
 
@@ -56,8 +56,8 @@ export default function ChatPage() {
   if (!conversation) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
-        <p className="text-sm font-medium">Conversation not found</p>
-        <p className="text-sm text-muted-foreground">It may have been deleted.</p>
+        <p className="text-sm font-medium">Conversa não encontrada</p>
+        <p className="text-sm text-muted-foreground">Ela pode ter sido excluída.</p>
       </div>
     );
   }
@@ -72,7 +72,7 @@ export default function ChatPage() {
         <div className="mx-auto w-full max-w-3xl">
           <MessageInput onSend={sendMessage} isStreaming={isStreaming} onStop={stopStreaming} />
           <p className="mt-1.5 text-center text-[11px] text-muted-foreground">
-            AI agents can make mistakes. Verify important information before acting on it.
+            Os agentes de IA podem cometer erros. Verifique informações importantes antes de agir com base nelas.
           </p>
         </div>
       </div>
