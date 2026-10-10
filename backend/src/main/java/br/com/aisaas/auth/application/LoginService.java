@@ -1,0 +1,58 @@
+package br.com.aisaas.auth.application;
+
+import br.com.aisaas.auth.api.dto.LoginRequest;
+import br.com.aisaas.auth.domain.User;
+import br.com.aisaas.auth.domain.UserStatus;
+import br.com.aisaas.auth.domain.exceptions.InvalidCredentialsException;
+import br.com.aisaas.auth.domain.exceptions.UserNotActiveException;
+import br.com.aisaas.auth.infra.UserRepository;
+import org.springframework.stereotype.Service;
+
+import java.util.Optional;
+
+@Service
+public class LoginService {
+    private static final String INVALID_CREDENTIALS = "Invalid e-mail or password.";
+
+    private final UserRepository userRepository;
+    private final Sanitizer sanitizer;
+    private final PasswordPolicy passwordPolicy;
+    private final JwtTokenService jwtTokenService;
+    private final RefreshTokenService refreshTokenService;
+
+    public LoginService(UserRepository userRepository, Sanitizer sanitizer, PasswordPolicy passwordPolicy, JwtTokenService jwtTokenService, RefreshTokenService refreshTokenService) {
+        this.userRepository = userRepository;
+        this.sanitizer = sanitizer;
+        this.passwordPolicy = passwordPolicy;
+        this.jwtTokenService = jwtTokenService;
+        this.refreshTokenService = refreshTokenService;
+    }
+
+    public AuthTokens login(LoginRequest loginRequest){
+
+        String sanitizedEmail = sanitizer.sanitizeEmail(loginRequest.email());
+
+        Optional<User> haveUser = userRepository.findByEmail(sanitizedEmail);
+
+        if (haveUser.isEmpty()){
+            passwordPolicy.burnPasswordCheck(loginRequest.password());
+            throw new InvalidCredentialsException(INVALID_CREDENTIALS);
+        }
+
+        boolean equalPassword = passwordPolicy.equalsPassword(haveUser.get(), loginRequest.password());
+
+        if (!equalPassword){
+            throw new InvalidCredentialsException(INVALID_CREDENTIALS);
+        }
+
+        if (haveUser.get().getStatus() != UserStatus.ACTIVE){
+            throw new UserNotActiveException("This account is not active.");
+        }
+
+        String accessToken = jwtTokenService.generateToken(haveUser.get());
+
+        String refreshToken = refreshTokenService.issue(haveUser.get());
+
+        return new AuthTokens(accessToken, jwtTokenService.getExpirationSeconds(), refreshToken);
+    }
+}

@@ -4,8 +4,8 @@ Plataforma SaaS B2B em que empresas configuram e conversam com agentes de IA esp
 
 | Pasta              | O que é                                                    | Estado                                              |
 |--------------------|------------------------------------------------------------|-----------------------------------------------------|
-| `AI-Saas Backend`  | API em Java 21 + Spring Boot                               | Módulo de **autenticação** pronto.                  |
-| `IA-Saas Web App`  | Frontend em React + TypeScript + Vite                      | Interface completa. **Autenticação integrada** ao backend; o resto roda sobre dados mockados. |
+| `backend`           | API em Java 21 + Spring Boot                               | Módulo de **autenticação** pronto.                  |
+| `frontend`         | Frontend em React + TypeScript + Vite                      | Interface completa. **Autenticação integrada** ao backend; o resto roda sobre dados mockados. |
 
 > O frontend usa o backend de verdade apenas para **cadastro, login e usuário atual** (`/api/auth/*`). Agentes, conversas, base de conhecimento, dashboard e recuperação de senha continuam mockados.
 
@@ -45,7 +45,7 @@ O perfil ativo por padrão é `dev`. Defina as variáveis de ambiente:
 | `DB_PASSWORD` | Senha do usuário `ai_saas_test` no SQL Server.                  |
 
 ```powershell
-cd "AI-Saas Backend"
+cd backend
 $env:JWT_SECRET = "troque-por-um-segredo-com-32-bytes-ou-mais"
 $env:DB_PASSWORD = "sua-senha"
 ./mvnw spring-boot:run
@@ -61,7 +61,7 @@ O schema é criado e atualizado automaticamente (`ddl-auto=update`). A validade 
 Pré-requisito: Node.js.
 
 ```bash
-cd "IA-Saas Web App"
+cd frontend
 npm install
 npm run dev       # servidor de desenvolvimento
 npm run build     # checagem de tipos + build de produção
@@ -149,13 +149,13 @@ Requisições sem token, ou com token inválido ou expirado, recebem `401` do Sp
 
 ```
 .
-├── AI-Saas Backend/
+├── backend/
 │   └── src/main/java/br/com/aisaas/auth
 │       ├── api/          controller, handler de erros e DTOs
 │       ├── application/  serviços (cadastro, login, JWT, política de senha)
 │       ├── domain/       entidade User, enums e exceções
 │       └── infra/        SecurityConfig e UserRepository
-└── IA-Saas Web App/
+└── frontend/
     └── src
         ├── features/     módulos por domínio: agents, auth, chat, conversations, dashboard, knowledge
         ├── pages/        telas roteadas (carregadas sob demanda)
