@@ -18,7 +18,7 @@ public class AgentControllerAdvice {
 
     @ExceptionHandler(InvalidAgentConfigException.class)
     public ResponseEntity<ErrorResponse> agentConfigExceptionResponse(InvalidAgentConfigException e){
-        if (e.getMessage().equals("The Temperature is upper than valid.")){
+        if (e.getMessage().equals(InvalidAgentConfigException.TEMPERATURE_TOO_HIGH)){
             return ResponseEntity.status(422).body(new ErrorResponse("INVALID_CONFIG", e.getMessage()));
         }
 
@@ -26,7 +26,7 @@ public class AgentControllerAdvice {
     }
 
     @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
-    public ResponseEntity<InvalidAgentConfigException> optimisticLockResponse(ObjectOptimisticLockingFailureException e){
-        return ResponseEntity.status(409).body(new InvalidAgentConfigException("message=This agent already modificated by another person, reload."));
+    public ResponseEntity<ErrorResponse> optimisticLockResponse(ObjectOptimisticLockingFailureException e){
+        return ResponseEntity.status(409).body(new ErrorResponse("CONFLICT", "Este agente foi modificado por outra pessoa. Recarregue a página e tente novamente."));
     }
 }

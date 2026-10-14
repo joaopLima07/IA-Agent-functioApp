@@ -1,6 +1,8 @@
-export type AgentStatus = "ACTIVE" | "INACTIVE" | "DRAFT";
+export type AgentStatus = "ACTIVE" | "PAUSED" | "DRAFT";
 
 export type AiProvider = "OpenAI" | "Anthropic" | "Gemini";
+
+export type AgentVisibility = "PRIVATE" | "PUBLIC";
 
 export interface AgentTool {
   id: string;
@@ -25,6 +27,9 @@ export interface AgentPermission {
 
 export interface Agent {
   id: string;
+  /** Optimistic-lock version; the backend rejects updates with a stale one. */
+  version: number;
+  visibility: AgentVisibility;
   name: string;
   description: string;
   status: AgentStatus;

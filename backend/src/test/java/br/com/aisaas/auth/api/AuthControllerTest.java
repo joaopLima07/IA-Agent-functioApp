@@ -48,7 +48,8 @@ class AuthControllerTest {
         RefreshCookieFactory cookieFactory = new RefreshCookieFactory(
                 new RefreshTokenProperties(Duration.ofDays(7), true, "Lax", "/api/auth"));
         mvc = MockMvcBuilders.standaloneSetup(new AuthController(
-                        service, loginService, mock(UserRepository.class), mock(RefreshTokenService.class), cookieFactory))
+                        service, loginService, mock(UserRepository.class), mock(RefreshTokenService.class), cookieFactory,
+                        mock(br.com.aisaas.auth.application.PasswordResetService.class)))
                 .setControllerAdvice(new AuthControllerAdvice())
                 .build();
     }

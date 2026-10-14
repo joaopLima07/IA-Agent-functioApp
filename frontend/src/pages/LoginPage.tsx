@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { ApiRequestError } from "@/types/api";
 import { loginSchema } from "@/features/auth/types/schemas";
@@ -107,18 +106,6 @@ export default function LoginPage() {
             Entrar
           </Button>
         </form>
-
-        <div className="my-5 flex items-center gap-3">
-          <Separator className="flex-1" />
-          <span className="text-xs text-muted-foreground">OU</span>
-          <Separator className="flex-1" />
-        </div>
-
-        <div className="space-y-2">
-          <Button variant="outline" className="w-full" type="button" onClick={() => toast.info("O SSO não está disponível nesta pré-visualização.")}>
-            Continuar com SSO
-          </Button>
-        </div>
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
           Não tem uma conta?{" "}

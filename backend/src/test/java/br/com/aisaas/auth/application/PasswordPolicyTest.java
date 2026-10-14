@@ -42,11 +42,6 @@ class PasswordPolicyTest {
     }
 
     @Test
-    void rejectsPasswordWithoutSpecialCharacters() {
-        assertThrows(WeakPasswordException.class, () -> policy.validPassword("Abcdefg12"));
-    }
-
-    @Test
     void sameRawPasswordProducesDifferentHashes() {
         assertNotEquals(policy.validPassword("Abcdef1!"), policy.validPassword("Abcdef1!"));
     }

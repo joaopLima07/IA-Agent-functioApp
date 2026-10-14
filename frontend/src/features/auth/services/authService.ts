@@ -1,14 +1,14 @@
 import { mockOrganization } from "@/mocks/user";
 import { apiClient } from "@/services/api";
-import { API_CONFIG, simulateLatency } from "@/services/config";
+import { API_CONFIG } from "@/services/config";
 import { ApiRequestError } from "@/types/api";
 import type { AuthSession, User, UserRole } from "@/types";
 
 /**
  * Auth service backed by the Spring Boot `/api/auth/*` endpoints
- * (register, login, me). The backend issues only a short-lived access
- * token — there is no refresh endpoint — so an expired session simply
- * sends the user back to the login page.
+ * (register, login, me, refresh, logout). The access token is short-lived;
+ * the refresh token lives in an httpOnly cookie and is exchanged for a new
+ * access token by `apiClient` when a request returns 401.
  */
 
 const SESSION_KEY = "auth_session";
@@ -81,14 +81,34 @@ export const authService = {
     return login(email, password);
   },
 
-  /** No backend endpoint yet — still mocked. */
-  async forgotPassword(_email: string): Promise<{ sent: boolean }> {
-    await simulateLatency(700);
-    return { sent: true };
+  /** Always succeeds for any well-formed e-mail: the backend doesn't reveal whether an account exists. */
+  async forgotPassword(email: string): Promise<void> {
+    await apiClient.post("/forgotPassword", { email }, { ...authApi, auth: false });
+  },
+
+  /** Checks the code e-mailed by `forgotPassword`; returns the token that authorizes `resetPassword`. */
+  async verifyResetCode(email: string, token: string): Promise<string> {
+    const { resetToken } = await apiClient.post<{ resetToken: string; expiresIn: number }>(
+      "/verifyResetCode",
+      { email, token },
+      { ...authApi, auth: false },
+    );
+    return resetToken;
+  },
+
+  /** Sets a new password using the token returned by `verifyResetCode`. */
+  async resetPassword(email: string, resetToken: string, newPassword: string): Promise<void> {
+    await apiClient.post("/resetPassword", { email, resetToken, newPassword }, { ...authApi, auth: false });
   },
 
   async logout(): Promise<void> {
-    clearSession();
+    try {
+      await apiClient.post("/logout", undefined, { ...authApi, auth: false });
+    } catch {
+      // Local sign-out must succeed even if the server can't be reached.
+    } finally {
+      clearSession();
+    }
   },
 
   /** Re-fetches the current user. Returns null (and clears the session) if the token was rejected. */
@@ -108,12 +128,9 @@ export const authService = {
     const raw = localStorage.getItem(SESSION_KEY);
     if (!raw) return null;
     try {
-      const session = JSON.parse(raw) as AuthSession;
-      if (new Date(session.expiresAt).getTime() <= Date.now()) {
-        clearSession();
-        return null;
-      }
-      return session;
+      // An expired access token is fine here: the /me check on startup
+      // refreshes it, or clears the session if the refresh token is gone too.
+      return JSON.parse(raw) as AuthSession;
     } catch {
       return null;
     }

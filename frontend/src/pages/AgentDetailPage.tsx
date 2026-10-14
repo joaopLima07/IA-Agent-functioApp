@@ -39,6 +39,9 @@ export default function AgentDetailPage() {
   if (isLoading || !draft) return <PageLoader />;
   if (isError || !agent) return <ErrorState description="Não foi possível carregar este agente." onRetry={() => refetch()} />;
 
+  const providerModels = MODEL_OPTIONS[draft.provider] ?? [];
+  const modelOptions = providerModels.includes(draft.model) ? providerModels : [draft.model, ...providerModels];
+
   const isDirty = JSON.stringify(draft) !== JSON.stringify(agent);
 
   const handleSave = () => {
@@ -106,7 +109,7 @@ export default function AgentDetailPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="ACTIVE">Ativo</SelectItem>
-                  <SelectItem value="INACTIVE">Inativo</SelectItem>
+                  <SelectItem value="PAUSED">Pausado</SelectItem>
                   <SelectItem value="DRAFT">Rascunho</SelectItem>
                 </SelectContent>
               </Select>
@@ -139,7 +142,7 @@ export default function AgentDetailPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {MODEL_OPTIONS[draft.provider].map((m) => (
+                  {modelOptions.map((m) => (
                     <SelectItem key={m} value={m}>
                       {m}
                     </SelectItem>
@@ -153,7 +156,7 @@ export default function AgentDetailPage() {
                 id="agent-temp"
                 type="number"
                 min={0}
-                max={1}
+                max={2}
                 step={0.1}
                 value={draft.temperature}
                 onChange={(e) => setDraft({ ...draft, temperature: Number(e.target.value) })}

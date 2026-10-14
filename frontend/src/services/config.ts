@@ -6,6 +6,7 @@
  */
 export const API_CONFIG = {
   authBaseUrl: import.meta.env.VITE_AUTH_API_BASE_URL ?? "/api/auth",
+  agentsBaseUrl: import.meta.env.VITE_AGENTS_API_BASE_URL ?? "/api/agents",
   baseUrl: import.meta.env.VITE_API_BASE_URL ?? "/api/v1",
   sseUrl: import.meta.env.VITE_SSE_URL ?? "/api/v1/stream",
   useMocks: (import.meta.env.VITE_USE_MOCKS ?? "true") === "true",

@@ -17,7 +17,6 @@ public class PasswordPolicy {
         this.dummyHash = passwordEncoder.encode("dummy-password-for-timing");
     }
 
-    /** Spends the same time as a real check, so unknown e-mails can't be told apart by response time. */
     public void burnPasswordCheck(String passwordSent){
         passwordEncoder.matches(passwordSent, dummyHash);
     }
@@ -25,26 +24,21 @@ public class PasswordPolicy {
     public String validPassword(String password){
 
         if (password.length() < 8){
-            throw new WeakPasswordException("The password is less then 8 caracters");
+            throw new WeakPasswordException("A senha deve ter pelo menos 8 caracteres.");
         }
 
         boolean haveText = Pattern.compile("[a-zA-Z]").matcher(password).find();
 
         if (!haveText){
-            throw new WeakPasswordException("The password dosen`t have text.");
+            throw new WeakPasswordException("A senha deve conter uma letra.");
         }
 
         boolean haveNumber = Pattern.compile("\\d").matcher(password).find();
 
         if (!haveNumber){
-            throw new WeakPasswordException("The password dosen`t have number.");
+            throw new WeakPasswordException("A senha deve conter um número.");
         }
 
-        boolean haveSpecial = Pattern.compile("[^a-zA-Z0-9]").matcher(password).find();
-
-        if (!haveSpecial){
-            throw new WeakPasswordException("The password dosen`t have special caracter.");
-        }
 
         return passwordEncoder.encode(password);
 

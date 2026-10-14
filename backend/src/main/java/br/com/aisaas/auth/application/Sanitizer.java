@@ -28,7 +28,7 @@ public class Sanitizer {
             }
             return Optional.of(util.format(number, PhoneNumberUtil.PhoneNumberFormat.E164));
         } catch (NumberParseException e) {
-            throw new InvalidPhoneNumberException("Invalid number.");
+            throw new InvalidPhoneNumberException("Número inválido.");
         }
     }
 

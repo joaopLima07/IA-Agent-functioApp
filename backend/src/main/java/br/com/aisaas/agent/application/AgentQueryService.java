@@ -19,7 +19,7 @@ public class AgentQueryService {
     }
 
     Optional<Agent> searchById(long userId){
-        return Optional.of(agentRepository.findById(userId).orElseThrow(() -> new AgentNotFoundException("Not found agent with id " + userId)));
+        return Optional.of(agentRepository.findById(userId).orElseThrow(() -> new AgentNotFoundException("Agente não encontrado com o id " + userId)));
     }
 
     public List<Agent> searchAll(){
@@ -36,11 +36,11 @@ public class AgentQueryService {
         Optional<Agent> haveAgent = searchById(id);
 
         if (updateAgentRequest.model().temperature() > 2){
-            throw new InvalidAgentConfigException("The Temperature is upper than valid.");
+            throw new InvalidAgentConfigException(InvalidAgentConfigException.TEMPERATURE_TOO_HIGH);
         }
 
         if (!haveAgent.get().getVersion().equals(updateAgentRequest.version())){
-            throw new InvalidAgentConfigException("This agent already modificated by another person, reload.");
+            throw new InvalidAgentConfigException("Este agente já foi modificado por outra pessoa, recarregue a página.");
         }
 
         Agent agent = haveAgent.get();

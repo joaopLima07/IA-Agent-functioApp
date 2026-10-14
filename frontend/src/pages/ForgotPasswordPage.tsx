@@ -1,18 +1,20 @@
 import { useState, type FormEvent } from "react";
-import { Link } from "react-router-dom";
-import { CheckCircle2, Loader2, Mail } from "lucide-react";
+import { toast } from "sonner";
+import { Link, useNavigate } from "react-router-dom";
+import { Loader2, Mail } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { authService } from "@/features/auth/services/authService";
+import { ApiRequestError } from "@/types/api";
 import { forgotPasswordSchema } from "@/features/auth/types/schemas";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [sent, setSent] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -23,38 +25,22 @@ export default function ForgotPasswordPage() {
     }
     setError("");
     setIsSubmitting(true);
-    await authService.forgotPassword(result.data.email);
-    setIsSubmitting(false);
-    setSent(true);
+    try {
+      await authService.forgotPassword(result.data.email);
+      toast.success("Se existir uma conta com esse e-mail, enviamos um código de redefinição. Confira sua caixa de entrada e o spam.");
+      navigate(`/reset-password?email=${encodeURIComponent(result.data.email)}`);
+    } catch (err) {
+      setError(err instanceof ApiRequestError ? err.message : "Não foi possível enviar o e-mail. Tente novamente.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
-
-  if (sent) {
-    return (
-      <Card className="border-border/60 shadow-lg">
-        <CardContent className="flex flex-col items-center gap-3 pt-6 text-center">
-          <div className="flex size-10 items-center justify-center rounded-full bg-success/10 text-success">
-            <CheckCircle2 className="size-5" />
-          </div>
-          <div>
-            <p className="text-sm font-medium">Verifique sua caixa de entrada</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Se existir uma conta para <span className="font-medium text-foreground">{email}</span>, enviamos um
-              link para redefinir sua senha.
-            </p>
-          </div>
-          <Button asChild variant="outline" className="mt-2 w-full">
-            <Link to="/login">Voltar para o login</Link>
-          </Button>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <Card className="border-border/60 shadow-lg">
       <CardHeader className="gap-1.5 pb-2">
         <CardTitle className="text-xl">Redefinir sua senha</CardTitle>
-        <CardDescription>Enviaremos um e-mail com um link para redefinir sua senha.</CardDescription>
+        <CardDescription>Enviaremos um e-mail com um código para redefinir sua senha.</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4" noValidate>
@@ -77,7 +63,7 @@ export default function ForgotPasswordPage() {
           </div>
           <Button type="submit" className="w-full" disabled={isSubmitting}>
             {isSubmitting && <Loader2 className="size-4 animate-spin" />}
-            Enviar link de redefinição
+            Enviar código
           </Button>
         </form>
         <p className="mt-6 text-center text-sm text-muted-foreground">

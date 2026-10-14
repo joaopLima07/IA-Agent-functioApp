@@ -3,7 +3,7 @@ import type { AgentStatus } from "@/types";
 
 const config: Record<AgentStatus, { label: string; variant: "success" | "secondary" | "warning" }> = {
   ACTIVE: { label: "Ativo", variant: "success" },
-  INACTIVE: { label: "Inativo", variant: "secondary" },
+  PAUSED: { label: "Pausado", variant: "secondary" },
   DRAFT: { label: "Rascunho", variant: "warning" },
 };
 

@@ -21,7 +21,7 @@ import java.util.UUID;
 
 @Service
 public class RefreshTokenService {
-    private static final String INVALID = "Invalid refresh token.";
+    private static final String INVALID = "Token de atualização inválido.";
     private static final int TOKEN_BYTES = 32;
 
     private final RefreshTokenRepository repository;
@@ -38,16 +38,12 @@ public class RefreshTokenService {
         this.properties = properties;
     }
 
-    /** Starts a new session (new family) and returns the raw refresh token. */
     @Transactional
     public String issue(User user) {
         return create(user.getId(), UUID.randomUUID()).raw();
     }
 
-    /**
-     * Exchanges a refresh token for a new pair. Reuse of a revoked token revokes the whole family;
-     * noRollbackFor keeps that revocation committed even though we throw.
-     */
+
     @Transactional(noRollbackFor = InvalidRefreshTokenException.class)
     public AuthTokens rotate(String rawToken) {
         if (rawToken == null || rawToken.isBlank()) {
@@ -79,7 +75,6 @@ public class RefreshTokenService {
         return new AuthTokens(jwtTokenService.generateToken(user), jwtTokenService.getExpirationSeconds(), next.raw());
     }
 
-    /** Idempotent: unknown or missing token is silently ignored. */
     @Transactional
     public void revoke(String rawToken) {
         if (rawToken == null || rawToken.isBlank()) {

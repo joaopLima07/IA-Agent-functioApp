@@ -22,7 +22,44 @@ function getAccessToken(): string | null {
   }
 }
 
-async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
+const SESSION_KEY = "auth_session";
+const TOKEN_KEY = "access_token";
+
+let refreshInFlight: Promise<boolean> | null = null;
+
+/**
+ * Exchanges the httpOnly refresh cookie for a new access token
+ * (POST /api/auth/refresh). Concurrent callers share one request.
+ */
+export function refreshAccessToken(): Promise<boolean> {
+  refreshInFlight ??= (async () => {
+    try {
+      const response = await fetch(`${API_CONFIG.authBaseUrl}/refresh`, {
+        method: "POST",
+        credentials: "include",
+      });
+      if (!response.ok) return false;
+      const { accessToken, expiresIn } = (await response.json()) as { accessToken: string; expiresIn: number };
+      localStorage.setItem(TOKEN_KEY, accessToken);
+      const raw = localStorage.getItem(SESSION_KEY);
+      if (raw) {
+        const session = JSON.parse(raw);
+        localStorage.setItem(
+          SESSION_KEY,
+          JSON.stringify({ ...session, accessToken, expiresAt: new Date(Date.now() + expiresIn * 1000).toISOString() }),
+        );
+      }
+      return true;
+    } catch {
+      return false;
+    } finally {
+      refreshInFlight = null;
+    }
+  })();
+  return refreshInFlight;
+}
+
+async function request<T>(path: string, options: RequestOptions = {}, isRetry = false): Promise<T> {
   const { auth = true, baseUrl = API_CONFIG.baseUrl, headers, ...rest } = options;
 
   const finalHeaders: Record<string, string> = {
@@ -39,6 +76,10 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     ...rest,
     headers: finalHeaders,
   });
+
+  if (response.status === 401 && auth && !isRetry && (await refreshAccessToken())) {
+    return request<T>(path, options, true);
+  }
 
   if (!response.ok) {
     let error: ApiError;

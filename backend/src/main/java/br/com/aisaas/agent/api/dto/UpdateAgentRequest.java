@@ -6,11 +6,11 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 
 public record UpdateAgentRequest(
-        @NotNull Integer version,
-        @NotNull @Valid AgentDetailResponse.Information information,
-        @NotNull @Valid AgentDetailResponse.Model model,
-        @NotBlank String systemPrompt,
-        @NotNull AgentVisibility visibility
+        @NotNull(message = "A versão é obrigatória") Integer version,
+        @NotNull(message = "As informações do agente são obrigatórias") @Valid AgentDetailResponse.Information information,
+        @NotNull(message = "A configuração do modelo é obrigatória") @Valid AgentDetailResponse.Model model,
+        @NotBlank(message = "O prompt do sistema é obrigatório") String systemPrompt,
+        @NotNull(message = "A visibilidade é obrigatória") AgentVisibility visibility
         ) {
     public record Information(
             @NotBlank String name,

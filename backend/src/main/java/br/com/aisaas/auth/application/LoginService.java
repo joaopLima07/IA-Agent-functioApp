@@ -12,7 +12,7 @@ import java.util.Optional;
 
 @Service
 public class LoginService {
-    private static final String INVALID_CREDENTIALS = "Invalid e-mail or password.";
+    private static final String INVALID_CREDENTIALS = "E-mail ou senha inválidos.";
 
     private final UserRepository userRepository;
     private final Sanitizer sanitizer;
@@ -46,7 +46,7 @@ public class LoginService {
         }
 
         if (haveUser.get().getStatus() != UserStatus.ACTIVE){
-            throw new UserNotActiveException("This account is not active.");
+            throw new UserNotActiveException("Esta conta não está ativa.");
         }
 
         String accessToken = jwtTokenService.generateToken(haveUser.get());

@@ -3,6 +3,8 @@ import type { Agent } from "@/types";
 export const mockAgents: Agent[] = [
   {
     id: "agt_customer_support",
+    version: 0,
+    visibility: "PRIVATE",
     name: "Suporte ao Cliente",
     description: "Atende dúvidas de clientes e solicitações relacionadas a pedidos pelos canais de chat e e-mail.",
     status: "ACTIVE",
@@ -39,6 +41,8 @@ export const mockAgents: Agent[] = [
   },
   {
     id: "agt_finance",
+    version: 0,
+    visibility: "PRIVATE",
     name: "Assistente Financeiro",
     description: "Gera faturas, explica cobranças e responde dúvidas da equipe financeira.",
     status: "ACTIVE",
@@ -73,6 +77,8 @@ export const mockAgents: Agent[] = [
   },
   {
     id: "agt_tech_support",
+    version: 0,
+    visibility: "PRIVATE",
     name: "Suporte Técnico",
     description: "Resolve problemas de produto, orienta os usuários nas correções e registra relatórios de bugs.",
     status: "ACTIVE",
@@ -108,6 +114,8 @@ export const mockAgents: Agent[] = [
   },
   {
     id: "agt_order_mgmt",
+    version: 0,
+    visibility: "PRIVATE",
     name: "Gestão de Pedidos",
     description: "Gerencia as ações do ciclo de vida de pedidos para a equipe de operações, do atendimento às devoluções.",
     status: "ACTIVE",
@@ -139,9 +147,11 @@ export const mockAgents: Agent[] = [
   },
   {
     id: "agt_invoice",
+    version: 0,
+    visibility: "PRIVATE",
     name: "Assistente de Faturas",
     description: "Assistente de autoatendimento para clientes que solicitam segundas vias de faturas e comprovantes de pagamento.",
-    status: "INACTIVE",
+    status: "PAUSED",
     provider: "Anthropic",
     model: "Claude Haiku 4.5",
     toolCount: 5,
@@ -165,6 +175,8 @@ export const mockAgents: Agent[] = [
   },
   {
     id: "agt_onboarding",
+    version: 0,
+    visibility: "PRIVATE",
     name: "Guia de Integração",
     description: "Orienta novos clientes corporativos na configuração do workspace e na configuração inicial.",
     status: "DRAFT",

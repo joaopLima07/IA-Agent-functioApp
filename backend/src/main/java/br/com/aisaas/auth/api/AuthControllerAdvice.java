@@ -1,12 +1,7 @@
 package br.com.aisaas.auth.api;
 
+import br.com.aisaas.auth.domain.exceptions.*;
 import br.com.aisaas.shared.api.dto.ErrorResponse;
-import br.com.aisaas.auth.domain.exceptions.EmailAlreadyRegisteredException;
-import br.com.aisaas.auth.domain.exceptions.InvalidCredentialsException;
-import br.com.aisaas.auth.domain.exceptions.InvalidPhoneNumberException;
-import br.com.aisaas.auth.domain.exceptions.InvalidRefreshTokenException;
-import br.com.aisaas.auth.domain.exceptions.UserNotActiveException;
-import br.com.aisaas.auth.domain.exceptions.WeakPasswordException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -30,7 +25,7 @@ public class AuthControllerAdvice {
         String message = e.getBindingResult().getFieldErrors().stream()
                 .findFirst()
                 .map(error -> error.getField() + ": " + error.getDefaultMessage())
-                .orElse("Invalid request");
+                .orElse("Requisição inválida");
         return ResponseEntity.status(400).body(new ErrorResponse("VALIDATION_ERROR", message));
     }
 
@@ -53,4 +48,15 @@ public class AuthControllerAdvice {
     public ResponseEntity<ErrorResponse> invalidRefreshToken(InvalidRefreshTokenException e){
         return ResponseEntity.status(401).body(new ErrorResponse("INVALID_REFRESH_TOKEN", e.getMessage()));
     }
+
+    @ExceptionHandler(InvalidResetTokenException.class)
+    public ResponseEntity<ErrorResponse> invalidResetTokenException(InvalidResetTokenException e){
+        return ResponseEntity.status(400).body(new ErrorResponse("INVALID_RESET_TOKEN", e.getMessage()));
+    }
+
+    @ExceptionHandler(PasswordSimilarToOldOneException.class)
+    public ResponseEntity<ErrorResponse> passwordSimiliarToOldOne(PasswordSimilarToOldOneException e){
+        return ResponseEntity.status(422).body(new ErrorResponse("PASSWORD_SIMILIAR", e.getMessage()));
+    }
+
 }

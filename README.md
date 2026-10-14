@@ -82,7 +82,7 @@ npm run preview   # prévia do build
 npm run lint      # oxlint
 ```
 
-Suba o backend antes (porta `8080`). Em desenvolvimento, o Vite faz proxy de `/api` para `http://localhost:8080`, então não é preciso CORS. Para apontar para outro endereço, defina `VITE_PROXY_TARGET`. O cadastro exige telefone em formato internacional (ex.: `+5511999999999`) e senha com letra, número e caractere especial.
+Suba o backend antes (porta `8080`). Em desenvolvimento, o Vite faz proxy de `/api` para `http://localhost:8080`, então não é preciso CORS. Para apontar para outro endereço, defina `VITE_PROXY_TARGET`. O cadastro exige telefone em formato internacional (ex.: `+5511999999999`) e senha com letra e número.
 
 ## API do backend
 
@@ -115,7 +115,7 @@ Resposta `201`:
 { "id": 1, "fullName": "Maria Silva", "email": "maria@exemplo.com" }
 ```
 
-Regras da senha: mínimo de 8 caracteres, com ao menos uma letra, um número e um caractere especial. O telefone é validado com `libphonenumber`.
+Regras da senha: mínimo de 8 caracteres, com ao menos uma letra e um número. O telefone é validado com `libphonenumber`.
 
 ### POST /api/auth/login
 

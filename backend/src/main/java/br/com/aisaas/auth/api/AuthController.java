@@ -1,11 +1,7 @@
 package br.com.aisaas.auth.api;
 
 import br.com.aisaas.auth.api.dto.*;
-import br.com.aisaas.auth.application.AuthTokens;
-import br.com.aisaas.auth.application.LoginService;
-import br.com.aisaas.auth.application.RegisterUserCommand;
-import br.com.aisaas.auth.application.RefreshTokenService;
-import br.com.aisaas.auth.application.RegisterUserService;
+import br.com.aisaas.auth.application.*;
 import br.com.aisaas.auth.domain.User;
 import br.com.aisaas.auth.domain.UserStatus;
 import br.com.aisaas.auth.domain.exceptions.InvalidCredentialsException;
@@ -27,14 +23,16 @@ public class AuthController {
     private final UserRepository userRepository;
     private final RefreshTokenService refreshTokenService;
     private final RefreshCookieFactory cookieFactory;
+    public final PasswordResetService passwordResetService;
 
     public AuthController(RegisterUserService registerUserService, LoginService loginService, UserRepository userRepository,
-                          RefreshTokenService refreshTokenService, RefreshCookieFactory cookieFactory) {
+                          RefreshTokenService refreshTokenService, RefreshCookieFactory cookieFactory, PasswordResetService passwordResetService) {
         this.registerUserService = registerUserService;
         this.loginService = loginService;
         this.userRepository = userRepository;
         this.refreshTokenService = refreshTokenService;
         this.cookieFactory = cookieFactory;
+        this.passwordResetService = passwordResetService;
     }
 
     @PostMapping("/api/auth/register")
@@ -51,6 +49,25 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @PostMapping("/api/auth/forgotPassword")
+    public ResponseEntity<Object> forgotPassword(@Valid @RequestBody ForgotPasswordRequest forgotPasswordRequest){
+        passwordResetService.generatedToken(forgotPasswordRequest);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/api/auth/verifyResetCode")
+    public ResponseEntity<VerifyResetCodeResponse> verifyResetCode(@Valid @RequestBody VerifyResetCodeRequest request){
+        return ResponseEntity.ok(passwordResetService.verifyResetCode(request));
+    }
+
+    @PostMapping("/api/auth/resetPassword")
+    public ResponseEntity<Object> resetPassword(@Valid @RequestBody ResetPasswordRequest resetPasswordRequest){
+        passwordResetService.resetPassword(resetPasswordRequest);
+
+        return ResponseEntity.noContent().build();
+    }
+
     @PostMapping("/api/auth/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request){
         return withRefreshCookie(loginService.login(request));
@@ -61,10 +78,10 @@ public class AuthController {
         long userId = Long.parseLong(jwt.getSubject());
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new InvalidCredentialsException("User not found"));
+                .orElseThrow(() -> new InvalidCredentialsException("Usuário não encontrado"));
 
         if (user.getStatus() != UserStatus.ACTIVE) {
-            throw new UserNotActiveException("User is not active");
+            throw new UserNotActiveException("Usuário não está ativo");
         }
 
         return ResponseEntity.ok(new MeResponse(
@@ -79,7 +96,7 @@ public class AuthController {
     @PostMapping("/api/auth/refresh")
     public ResponseEntity<LoginResponse> refresh(@CookieValue(name = RefreshCookieFactory.COOKIE_NAME, required = false) String refreshToken){
         if (refreshToken == null || refreshToken.isBlank()) {
-            throw new InvalidRefreshTokenException("Missing refresh token.");
+            throw new InvalidRefreshTokenException("Token de atualização ausente.");
         }
         return withRefreshCookie(refreshTokenService.rotate(refreshToken));
     }

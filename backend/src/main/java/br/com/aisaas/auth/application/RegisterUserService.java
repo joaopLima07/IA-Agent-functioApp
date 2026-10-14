@@ -28,7 +28,7 @@ public class RegisterUserService {
         Optional<String> sanitizedPhone = sanitize.sanitizePhoneNumber(userCommand.getPhone());
 
         if (sanitizedPhone.isEmpty()){
-            throw new InvalidPhoneNumberException("The phone number informed was invalid.");
+            throw new InvalidPhoneNumberException("O número de telefone informado é inválido.");
         }
 
         User user = new User();
@@ -41,9 +41,11 @@ public class RegisterUserService {
         Optional<User> haveEmail = registerUserRepository.findByEmail(user.getEmail());
 
         if (haveEmail.isPresent()){
-            throw new EmailAlreadyRegisteredException("This e-mail already registered.");
+            throw new EmailAlreadyRegisteredException("Este e-mail já está registrado.");
         }
 
         return registerUserRepository.save(user);
     }
+
+    
 }
