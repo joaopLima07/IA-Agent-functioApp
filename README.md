@@ -4,24 +4,26 @@ Plataforma SaaS B2B em que empresas configuram e conversam com agentes de IA esp
 
 | Pasta              | O que é                                                    | Estado                                              |
 |--------------------|------------------------------------------------------------|-----------------------------------------------------|
-| `backend`          | API em Java 21 + Spring Boot                               | **Autenticação** (com refresh token) e **consulta de agentes** prontas. |
-| `frontend`         | Frontend em React + TypeScript + Vite                      | Interface completa. **Cadastro, login e usuário atual** integrados ao backend; o resto roda sobre dados mockados. |
+| `backend`          | API em Java 21 + Spring Boot                               | **Autenticação** (refresh token e recuperação de senha por e-mail) e **agentes** (listar, ver e editar) prontos. |
+| `frontend`         | Frontend em React + TypeScript + Vite                      | Interface completa. **Autenticação, recuperação de senha e agentes** integrados ao backend; o resto roda sobre dados mockados. |
 
-> O frontend usa o backend de verdade apenas para `register`, `login` e `me`. Ainda não consome `refresh`, `logout` nem `/api/agents`. Agentes, conversas, base de conhecimento, dashboard e recuperação de senha continuam mockados no front.
+> O frontend usa o backend de verdade para `register`, `login`, `me`, `refresh`, `logout`, a recuperação de senha e `/api/agents`. Conversas, base de conhecimento, dashboard e organização continuam mockados no front, e ferramentas, fontes de conhecimento e permissões dos agentes ainda não existem no backend.
 
 ## Visão geral do que existe
 
 **Backend**
 - Cadastro de usuários, login com JWT (HS256) e consulta do usuário autenticado.
 - Refresh token com rotação, guardado em cookie `HttpOnly`, e logout que revoga o token.
-- Listagem e detalhe de agentes (somente leitura por enquanto).
+- Recuperação de senha em três etapas: pedido do código, verificação do código de 6 números enviado por e-mail e definição da nova senha.
+- Listagem, detalhe e edição de agentes, com controle otimista de concorrência.
 - Política de senha, validação de telefone (`libphonenumber`) e senha com BCrypt.
+- Documentação OpenAPI (Swagger UI).
 - Spring AI (Anthropic e Google GenAI) já nas dependências, ainda sem uso.
 
 **Frontend**
-- Telas de login, cadastro e recuperação de senha, com rotas protegidas.
+- Telas de login, cadastro e recuperação de senha (código e nova senha em duas etapas), com rotas protegidas e renovação automática do access token.
 - Chat com agentes: respostas em streaming, markdown com realce de código e cards de chamada de ferramenta.
-- Histórico de conversas, listagem e detalhe de agentes.
+- Histórico de conversas, listagem, detalhe e edição de agentes.
 - Base de conhecimento com upload de documentos.
 - Dashboard com gráficos (conversas, uso de agentes, tokens, tempo de resposta, resultado de ferramentas).
 - Configurações, tema claro/escuro e layout responsivo.
@@ -30,31 +32,41 @@ Plataforma SaaS B2B em que empresas configuram e conversam com agentes de IA esp
 
 | Camada   | Tecnologias                                                                                           |
 |----------|-------------------------------------------------------------------------------------------------------|
-| Backend  | Java 21, Spring Boot 4.1.1 (Web MVC, Data JPA, Validation, OAuth2 Resource Server), Nimbus JOSE, SQL Server (dev), H2 (testes) |
+| Backend  | Java 21, Spring Boot 4.1.1 (Web MVC, Data JPA, Validation, OAuth2 Resource Server), Nimbus JOSE, PostgreSQL, Spring Mail, springdoc-openapi, H2 (testes) |
 | Frontend | React 19, TypeScript, Vite, Tailwind CSS 4, Radix UI (estilo shadcn/ui), TanStack Query, React Router 7, Zod, Recharts, react-markdown |
 
 ## Como rodar
 
 ### Backend
 
-Pré-requisitos: JDK 21 e um SQL Server em `localhost:1433` com o banco `AI-SAAS`.
+Pré-requisitos: JDK 21 e um PostgreSQL acessível (a conexão usa `sslmode=require`).
 
 O perfil ativo por padrão é `dev`. Defina as variáveis de ambiente:
 
-| Variável      | Descrição                                                       |
-|---------------|-----------------------------------------------------------------|
-| `JWT_SECRET`  | Segredo do JWT. Mínimo de 32 bytes, senão a aplicação não sobe. |
-| `DB_PASSWORD` | Senha do usuário `ai_saas_test` no SQL Server.                  |
+| Variável        | Descrição                                                                 |
+|-----------------|---------------------------------------------------------------------------|
+| `HOST`          | Host do PostgreSQL.                                                       |
+| `PORT`          | Porta do PostgreSQL.                                                      |
+| `DATABASE`      | Nome do banco.                                                            |
+| `USER`          | Usuário do banco.                                                         |
+| `PASSWORD`      | Senha do banco.                                                           |
+| `MAIL_USERNAME` | Conta Gmail que envia o código de recuperação de senha.                   |
+| `MAIL_PASSWORD` | Senha de app dessa conta (não a senha normal).                            |
+
+O segredo do JWT fica em `jwt.secret` (mínimo de 32 bytes, senão a aplicação não sobe). O SMTP usa `smtp.gmail.com:587` com STARTTLS; troque `spring.mail.host` e `spring.mail.port` para outro provedor.
 
 ```powershell
 cd backend
-$env:JWT_SECRET = "troque-por-um-segredo-com-32-bytes-ou-mais"
-$env:DB_PASSWORD = "sua-senha"
+$env:HOST = "localhost"; $env:PORT = "5432"; $env:DATABASE = "ai_saas"
+$env:USER = "usuario"; $env:PASSWORD = "sua-senha"
+$env:MAIL_USERNAME = "conta@gmail.com"; $env:MAIL_PASSWORD = "senha-de-app"
 ./mvnw spring-boot:run
 
 # Testes
 ./mvnw test
 ```
+
+O teste `AiSaasApplicationTests.contextLoads` sobe a aplicação inteira e só passa com essas variáveis apontando para um banco acessível.
 
 O schema é criado e atualizado automaticamente (`ddl-auto=update`). A validade do access token é configurada em `jwt.expiration-seconds` (padrão `900`).
 
@@ -67,7 +79,7 @@ Propriedades do refresh token (prefixo `refresh-token.`):
 | `cookie-same-site` | `Lax`    | Atributo `SameSite` do cookie.                                   |
 | `cookie-path`   | `/api/auth` | Caminho em que o cookie é enviado.                               |
 
-> O `application-dev.properties` está no `.gitignore` e não vai para o repositório. Crie-o em `backend/src/main/resources/` com a URL, usuário e senha do banco, `spring.jpa.hibernate.ddl-auto=update`, `refresh-token.ttl` e `refresh-token.cookie-secure=false`.
+> O `application-dev.properties` está no `.gitignore` e não vai para o repositório. Crie-o em `backend/src/main/resources/` com `spring.jpa.hibernate.ddl-auto=update`, `refresh-token.ttl` e `refresh-token.cookie-secure=false`.
 
 ### Frontend
 
@@ -82,7 +94,7 @@ npm run preview   # prévia do build
 npm run lint      # oxlint
 ```
 
-Suba o backend antes (porta `8080`). Em desenvolvimento, o Vite faz proxy de `/api` para `http://localhost:8080`, então não é preciso CORS. Para apontar para outro endereço, defina `VITE_PROXY_TARGET`. O cadastro exige telefone em formato internacional (ex.: `+5511999999999`) e senha com letra e número.
+Suba o backend antes (porta `8080`; o Swagger UI fica em `http://localhost:8080/swagger-ui.html`). Em desenvolvimento, o Vite faz proxy de `/api` para `http://localhost:8080`, então não é preciso CORS. Para apontar para outro endereço, defina `VITE_PROXY_TARGET`. O cadastro exige telefone em formato internacional (ex.: `+5511999999999`) e senha com letra e número.
 
 ## API do backend
 
@@ -92,9 +104,13 @@ Suba o backend antes (porta `8080`). Em desenvolvimento, o Vite faz proxy de `/a
 | POST   | `/api/auth/login`    | Não          | Autentica, retorna o access token e define o cookie de refresh. |
 | POST   | `/api/auth/refresh`  | Cookie       | Troca o refresh token por um novo par (rotação). |
 | POST   | `/api/auth/logout`   | Cookie       | Revoga o refresh token e limpa o cookie. |
+| POST   | `/api/auth/forgotPassword`   | Não  | Envia por e-mail um código de 6 números. |
+| POST   | `/api/auth/verifyResetCode`  | Não  | Confere o código e devolve o `resetToken`. |
+| POST   | `/api/auth/resetPassword`    | Não  | Define a nova senha com o `resetToken`. |
 | GET    | `/api/auth/me`       | Bearer JWT   | Retorna o usuário autenticado. |
 | GET    | `/api/agents`        | Bearer JWT   | Lista os agentes (resumo).     |
 | GET    | `/api/agents/{id}`   | Bearer JWT   | Detalhe de um agente.          |
+| PUT    | `/api/agents/{id}`   | Bearer JWT   | Atualiza um agente.            |
 
 Qualquer outra rota exige JWT.
 
@@ -115,7 +131,7 @@ Resposta `201`:
 { "id": 1, "fullName": "Maria Silva", "email": "maria@exemplo.com" }
 ```
 
-Regras da senha: mínimo de 8 caracteres, com ao menos uma letra e um número. O telefone é validado com `libphonenumber`.
+Regras da senha: mínimo de 8 caracteres, com ao menos uma letra e um número (caractere especial não é exigido). O telefone é validado com `libphonenumber`.
 
 ### POST /api/auth/login
 
@@ -129,7 +145,7 @@ Resposta `200`:
 { "accessToken": "<jwt>", "expiresIn": 900 }
 ```
 
-O refresh token vai no cookie `refresh_token` (`HttpOnly`, `SameSite=Lax`, caminho `/api/auth`), nunca no corpo. O token de acesso tem como `subject` o id do usuário e traz os claims `role` e, quando existir, `organizationId`. O login gasta o mesmo tempo para e-mails desconhecidos, para não revelar se um e-mail está cadastrado.
+O refresh token vai no cookie `refresh_token` (`HttpOnly`, `SameSite=Lax`, caminho `/api/auth`), nunca no corpo. O token de acesso tem como `subject` o id do usuário e traz o claim `role`. O login gasta o mesmo tempo para e-mails desconhecidos, para não revelar se um e-mail está cadastrado.
 
 ### POST /api/auth/refresh e /api/auth/logout
 
@@ -137,6 +153,21 @@ Sem corpo. Ambos leem o cookie `refresh_token`.
 
 - `refresh`: responde `200` com `{ "accessToken": "...", "expiresIn": 900 }` e um novo cookie. Sem cookie, ou com token inválido, responde `401 INVALID_REFRESH_TOKEN`.
 - `logout`: responde `204`, revoga o token e expira o cookie.
+
+### Recuperação de senha
+
+Três etapas, todas públicas:
+
+1. `POST /api/auth/forgotPassword` com `{ "email": "maria@exemplo.com" }`. Responde sempre `204`, exista conta ou não, para não revelar quais e-mails estão cadastrados. Se houver conta, envia por e-mail um código de 6 números, válido por 10 minutos, e invalida os códigos anteriores do usuário.
+2. `POST /api/auth/verifyResetCode` com `{ "email": "...", "token": "483920" }`. O `token` precisa ter exatamente 6 números. Um código só pode ser verificado uma vez, e erros de código contam como tentativa (máximo de 5). Resposta `200`:
+
+   ```json
+   { "resetToken": "<token opaco>", "expiresIn": 600 }
+   ```
+
+3. `POST /api/auth/resetPassword` com `{ "email": "...", "resetToken": "<token opaco>", "newPassword": "NovaSenha1" }`. Responde `204`. Se a senha for recusada pela política, o `resetToken` não é consumido e vale até expirar. Em caso de sucesso ele é invalidado.
+
+Qualquer falha de código ou token (inexistente, expirado, usado, errado ou e-mail desconhecido) responde `400 INVALID_RESET_TOKEN` com a mesma mensagem. Nem o código nem o `resetToken` são guardados em texto: só o hash BCrypt vai para o banco.
 
 ### GET /api/auth/me
 
@@ -179,9 +210,27 @@ Resposta `200`:
 
 Se o agente não existir, responde `404`.
 
+### PUT /api/agents/{id}
+
+Header: `Authorization: Bearer <accessToken>`
+
+Corpo (o `version` precisa ser o mesmo lido no detalhe):
+
+```json
+{
+  "version": 0,
+  "information": { "name": "Suporte", "description": "Atende dúvidas", "status": "ACTIVE" },
+  "model": { "modelProvider": "anthropic", "modelName": "claude-sonnet-5-5", "temperature": 0.7, "maxTokens": 1024 },
+  "systemPrompt": "Você é um agente de suporte...",
+  "visibility": "PRIVATE"
+}
+```
+
+Resposta `200` com o detalhe atualizado. Temperatura acima de `2` responde `422 INVALID_CONFIG`; edição sobre uma versão antiga (alguém salvou antes) responde `409 CONFLICT`.
+
 ### Erros
 
-Todos os erros de autenticação seguem o formato `{ "code": "...", "message": "..." }`.
+Os erros seguem o formato `{ "code": "...", "message": "..." }`.
 
 | Status | `code`                     | Quando                                             |
 |--------|----------------------------|----------------------------------------------------|
@@ -192,6 +241,10 @@ Todos os erros de autenticação seguem o formato `{ "code": "...", "message": "
 | 409    | `EMAIL_ALREADY_REGISTERED` | E-mail já cadastrado.                              |
 | 422    | `WEAK_PASSWORD`            | Senha fora da política.                            |
 | 422    | `INVALID_PHONE`            | Telefone inválido.                                 |
+| 400    | `INVALID_RESET_TOKEN`      | Código ou token de redefinição de senha inválido.  |
+| 404    | `NOT_FOUND`                | Agente não encontrado.                             |
+| 409    | `CONFLICT`                 | Agente alterado por outra pessoa; recarregue.      |
+| 422    | `INVALID_CONFIG`           | Configuração do agente inválida (ex.: temperatura). |
 
 Requisições sem token, ou com token inválido ou expirado, recebem `401` do Spring Security.
 
@@ -205,7 +258,7 @@ Requisições sem token, ou com token inválido ou expirado, recebem `401` do Sp
 
 - **Status (`AgentStatus`)**: `DRAFT` (padrão), `ACTIVE`, `PAUSED`.
 - **Visibilidade (`AgentVisibility`)**: `PRIVATE` (padrão), `PUBLIC`.
-- Temperatura entre `0.0` e `2.0` (padrão `0.7`) e `maxTokens` até `2048`.
+- Temperatura entre `0.0` e `2.0` (padrão `0.7`) e `maxTokens` positivo, até `2048`.
 - Usa controle otimista de concorrência (`version`).
 
 ## Estrutura do repositório
@@ -216,14 +269,15 @@ Requisições sem token, ou com token inválido ou expirado, recebem `401` do Sp
 │   └── src/main/java/br/com/aisaas
 │       ├── auth/
 │       │   ├── api/          controller, handler de erros, cookie de refresh e DTOs
-│       │   ├── application/  serviços (cadastro, login, JWT, refresh token, política de senha)
-│       │   ├── domain/       User, RefreshToken, enums e exceções
-│       │   └── infra/        SecurityConfig e repositórios
-│       └── agent/
-│           ├── controller/   AgentController, handler de erros e DTOs
-│           ├── application/  AgentQueryService
-│           ├── domain/       entidade Agent, enums e exceções
-│           └── infra/        AgentRepository
+│       │   ├── application/  serviços (cadastro, login, JWT, refresh token, recuperação de senha, envio de e-mail, política de senha)
+│       │   ├── domain/       User, RefreshToken, PasswordResetToken, enums e exceções
+│       │   └── infra/        repositórios
+│       ├── agent/
+│       │   ├── api/          AgentController, handler de erros e DTOs
+│       │   ├── application/  AgentQueryService
+│       │   ├── domain/       entidade Agent, enums e exceções
+│       │   └── infra/        AgentRepository
+│       └── shared/           SecurityConfig, configuração assíncrona e ErrorResponse
 └── frontend/
     └── src
         ├── features/     módulos por domínio: agents, auth, chat, conversations, dashboard, knowledge
@@ -239,7 +293,7 @@ Cada módulo do frontend em `features/` segue o padrão `components/`, `hooks/`,
 
 ## Próximos passos
 
-- Integrar o frontend a `refresh`, `logout` e `/api/agents`. Hoje o access token expira em 15 min e o usuário volta ao login.
-- Endpoint de recuperação de senha.
-- Criação, edição e exclusão de agentes (`UpdateAgentRequest` ainda está vazio).
+- Criação e exclusão de agentes (hoje só é possível listar, ver e editar).
+- Ferramentas, fontes de conhecimento e permissões dos agentes no backend.
+- Endpoint de organização, que ainda é mockado no frontend.
 - Implementar no backend os módulos de conversas, base de conhecimento e dashboard, usando o Spring AI.
