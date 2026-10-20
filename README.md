@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/assets/logo-wordmark.png" alt="AI Nexus" width="320" />
+</p>
+
 # AI-Saas
 
 Plataforma SaaS B2B em que empresas configuram e conversam com agentes de IA especializados. O repositório reúne duas aplicações:

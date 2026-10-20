@@ -8,7 +8,6 @@ import br.com.aisaas.agent.infra.AgentRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class AgentQueryService {
@@ -18,32 +17,32 @@ public class AgentQueryService {
         this.agentRepository = agentRepository;
     }
 
-    Optional<Agent> searchById(long userId){
-        return Optional.of(agentRepository.findById(userId).orElseThrow(() -> new AgentNotFoundException("Agente não encontrado com o id " + userId)));
+    Agent searchById(long id){
+        return agentRepository.findById(id).orElseThrow(() -> new AgentNotFoundException("Agente não encontrado com o id " + id));
     }
 
     public List<Agent> searchAll(){
-        return agentRepository.findAll();
+        return agentRepository.findAllAgentPublic();
+    }
+
+    public Agent findRouterAgent(){
+        return agentRepository.findAgentDecision();
     }
 
     public Agent searchUnique(long id){
-        Optional<Agent> haveAgent = searchById(id);
-
-       return haveAgent.get();
+       return searchById(id);
     }
 
     public Agent updateAgent(long id, UpdateAgentRequest updateAgentRequest){
-        Optional<Agent> haveAgent = searchById(id);
+        Agent agent = searchById(id);
 
         if (updateAgentRequest.model().temperature() > 2){
             throw new InvalidAgentConfigException(InvalidAgentConfigException.TEMPERATURE_TOO_HIGH);
         }
 
-        if (!haveAgent.get().getVersion().equals(updateAgentRequest.version())){
+        if (!agent.getVersion().equals(updateAgentRequest.version())){
             throw new InvalidAgentConfigException("Este agente já foi modificado por outra pessoa, recarregue a página.");
         }
-
-        Agent agent = haveAgent.get();
 
         agent.setName(updateAgentRequest.information().name());
         agent.setDescription(updateAgentRequest.information().description());
@@ -57,6 +56,8 @@ public class AgentQueryService {
 
         return agentRepository.save(agent);
     }
+
+
 }
 
 
