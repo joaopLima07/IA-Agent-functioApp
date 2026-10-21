@@ -1,9 +1,9 @@
 package br.com.aisaas.conversation.application;
 
-import br.com.aisaas.conversation.api.dto.AlterStatusConversationRequest;
 import br.com.aisaas.conversation.api.dto.AlterTitleRequest;
 import br.com.aisaas.conversation.api.dto.CreateConversationRequest;
 import br.com.aisaas.conversation.domain.Conversation;
+import br.com.aisaas.conversation.domain.ConversationStatus;
 import br.com.aisaas.conversation.domain.exceptions.ConversationNotFoundException;
 import br.com.aisaas.conversation.infra.ConversationRepository;
 import org.springframework.stereotype.Service;
@@ -35,19 +35,21 @@ public class ConversationCommandService {
         conversationRepository.delete(findByIdAndUserId(id, userId));
     }
 
-    public void alterStatus(AlterStatusConversationRequest alterStatusConversationRequest, long userId){
-        Conversation conversation = findByIdAndUserId(alterStatusConversationRequest.id(), userId);
+    public ConversationStatus alterStatus(long id, ConversationStatus conversationStatus , long userId){
+        Conversation conversation = findByIdAndUserId(id, userId);
 
-        conversation.setStatus(alterStatusConversationRequest.status());
+        conversation.setStatus(conversationStatus);
 
-        conversationRepository.save(conversation);
+        Conversation conversationSaved = conversationRepository.save(conversation);
+
+        return conversationSaved.getStatus();
     }
 
-    public void renameTitle(AlterTitleRequest alterTitleNameRequest, long userId){
-        Conversation conversation = findByIdAndUserId(alterTitleNameRequest.id(), userId);
+    public Conversation renameTitle(long id, AlterTitleRequest alterTitleNameRequest, long userId){
+        Conversation conversation = findByIdAndUserId(id, userId);
 
         conversation.setTitle(alterTitleNameRequest.newTitle());
 
-        conversationRepository.save(conversation);
+        return conversationRepository.save(conversation);
     }
 }

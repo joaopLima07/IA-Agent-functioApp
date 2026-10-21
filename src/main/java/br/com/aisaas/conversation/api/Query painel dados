@@ -1,0 +1,5 @@
+
+Query de tokens utilizados por dia
+
+select created_at::date date, sum(total_token) from message group by created_at::date
+

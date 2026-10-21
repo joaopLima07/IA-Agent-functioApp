@@ -8,9 +8,9 @@ import java.util.List;
 import java.util.Optional;
 
 public interface AgentRepository extends JpaRepository<Agent, Long> {
-    @Query("select a from agent a where a.visibility = 'PUBLIC'")
+    @Query("select a from Agent a where a.visibility = 'PUBLIC'")
     public List<Agent> findAllAgentPublic();
 
-    @Query("select a from agent a where a.id = 10")
+    @Query("select a from Agent a where a.id = 10")
     public Agent findAgentDecision();
 }

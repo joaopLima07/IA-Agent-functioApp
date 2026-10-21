@@ -8,5 +8,10 @@ import java.util.List;
 public record ConversationSummaryResponse(long id,
                                           long userId,
                                           String title,
-                                          ConversationStatus status) {
+                                          ConversationStatus status,
+                                          String lastMessage) {
+
+    public ConversationSummaryResponse(long id, long userId, String title, ConversationStatus status) {
+        this(id, userId, title, status, null);
+    }
 }

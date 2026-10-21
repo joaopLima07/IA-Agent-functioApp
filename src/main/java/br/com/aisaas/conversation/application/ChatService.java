@@ -3,20 +3,30 @@ package br.com.aisaas.conversation.application;
 import br.com.aisaas.agent.application.AgentQueryService;
 import br.com.aisaas.agent.domain.Agent;
 import br.com.aisaas.conversation.api.dto.SendMessageRequest;
-import br.com.aisaas.conversation.application.dto.ReplyResult;
 import br.com.aisaas.conversation.domain.Conversation;
 import br.com.aisaas.conversation.domain.Message;
 import br.com.aisaas.conversation.domain.MessageRole;
 import br.com.aisaas.conversation.domain.exceptions.ConversationNotFoundException;
+import br.com.aisaas.conversation.domain.exceptions.InvalidRouterResponseException;
 import br.com.aisaas.conversation.infra.ConversationRepository;
 import br.com.aisaas.conversation.infra.MessageRepository;
-import jakarta.transaction.Transactional;
+import br.com.aisaas.shared.api.dto.ErrorResponse;
+import org.springframework.ai.chat.messages.AssistantMessage;
+import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.ai.chat.metadata.Usage;
+import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import reactor.core.scheduler.Schedulers;
+
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Service
 public class ChatService {
@@ -55,13 +65,49 @@ public class ChatService {
     }
 
 
-    Conversation checkMessage(SendMessageRequest sendMessageRequest, long userId){
-        return conversationRepository.findByIdAndUserId(sendMessageRequest.id(), userId)
+    public java.util.Map<Long, String> lastUserMessages(List<Long> conversationIds){
+        if (conversationIds.isEmpty()){
+            return java.util.Map.of();
+        }
+
+        return messageRepository.lastUserMessages(conversationIds).stream()
+                .collect(java.util.stream.Collectors.toMap(Message::getConversationId, Message::getContent, (a, b) -> a));
+    }
+
+    Conversation checkMessage(long id, long userId){
+        return conversationRepository.findByIdAndUserId(id, userId)
                 .orElseThrow(() -> new ConversationNotFoundException("This conversation could not be found for this user."));
     }
 
-    public String orquestratorMessage(SendMessageRequest sendMessageRequest, long userId){
-        Conversation conversation = checkMessage(sendMessageRequest, userId);
+    List<org.springframework.ai.chat.messages.Message> toAiMessages(List<Message> history){
+        List<org.springframework.ai.chat.messages.Message> result = new ArrayList<>();
+        for (Message m : history){
+            if (m.getRole() == MessageRole.USER){
+                result.add(new UserMessage(m.getContent()));
+            } else {
+                result.add(new AssistantMessage(m.getContent()));
+            }
+        }
+
+        return result;
+    }
+
+    long parseAgentId(String response){
+        if (response == null || response.isBlank()){
+            throw new InvalidRouterResponseException("The router returned an empty response.");
+        }
+
+        try {
+            return Long.parseLong(response.trim());
+        } catch (NumberFormatException e){
+            throw new InvalidRouterResponseException("The router did not return a valid agent id: " + response);
+        }
+    }
+
+    public SseEmitter orquestratorMessage(long id, SendMessageRequest sendMessageRequest, long userId){
+        long start = System.nanoTime();
+
+        Conversation conversation = checkMessage(id, userId);
 
         Message message = new Message();
 
@@ -97,28 +143,92 @@ public class ChatService {
             promptFiveMessage += message1.getRole() + ": " + message1.getContent() + " | AgentId: " + message1.getAgentId() + "\n";
         }
 
-
         Agent routerAgent = agentQueryService.findRouterAgent();
 
-        long agentRouterResponse = agentRouter.choseAgent(routerAgent, promptFiveMessage, promptAgents);
+        ChatResponse agentRouterResponse = agentRouter.choseAgent(routerAgent, promptFiveMessage, promptAgents);
 
-        Agent chosenAgent = agentQueryService.searchUnique(agentRouterResponse);
+        long agentRouterId = parseAgentId(agentRouterResponse.getResult().getOutput().getText());
 
-        ReplyResult finalMesage = replyGeneretor.finalMessage(chosenAgent, promptFiveMessage);
+        Usage usageRouterResponse = agentRouterResponse.getMetadata().getUsage();
 
-        Message aiMessage = new Message();
 
-        aiMessage.setContent(finalMesage.content());
-        aiMessage.setAgentId(chosenAgent.getId());
-        aiMessage.setRole(MessageRole.ASSISTANT);
-        aiMessage.setConversationId(conversation.getId());
-        aiMessage.setInputToken(finalMesage.inputToken());
-        aiMessage.setOutputToken(finalMesage.outputToken());
-        aiMessage.setLatencyMs(finalMesage.latencyMs());
+        int inputTokens = usageRouterResponse.getPromptTokens();
 
-        messageRepository.save(aiMessage);
+        int outputTokens = usageRouterResponse.getCompletionTokens();
 
-        return finalMesage.content();
+        int totalTokens = usageRouterResponse.getTotalTokens();
+
+        Agent chosenAgent = agentQueryService.searchUnique(agentRouterId);
+
+
+
+        StringBuilder fullText = new StringBuilder();
+        AtomicReference<Usage> lastUsage = new AtomicReference<>();
+
+        List<org.springframework.ai.chat.messages.Message> toAiMessage = toAiMessages(last5Message);
+
+        SseEmitter emitter = new SseEmitter(120_000L);
+
+        replyGeneretor.finalMessage(chosenAgent, toAiMessage)
+                .doOnNext(chunk -> {
+                    // o usage normalmente só vem preenchido nos últimos chunks
+                    if (chunk.getMetadata() != null && chunk.getMetadata().getUsage() != null) {
+                        lastUsage.set(chunk.getMetadata().getUsage());
+                    }
+                })
+                .mapNotNull(chunk -> chunk.getResult() == null ? null : chunk.getResult().getOutput().getText())
+                .doOnNext(fullText::append)
+                .doFinally(signal -> {
+                    // roda em complete, erro e cancel (cliente desconectou): salva a resposta parcial também
+                    if (fullText.isEmpty()) {
+                        return;
+                    }
+
+                    int latencyMs = (int) ((System.nanoTime() - start) / 1_000_000);
+                    Usage usage = lastUsage.get();
+
+                    Message aiMessage = new Message();
+
+                    aiMessage.setContent(fullText.toString());
+                    aiMessage.setAgentId(chosenAgent.getId());
+                    aiMessage.setRole(MessageRole.ASSISTANT);
+                    aiMessage.setConversationId(conversation.getId());
+                    aiMessage.setLatencyMs(latencyMs);
+
+                    if (usage != null) {
+                        aiMessage.setInputToken(usage.getPromptTokens() + inputTokens);
+                        aiMessage.setOutputToken(usage.getCompletionTokens() + outputTokens);
+                        aiMessage.setTotalToken(usage.getTotalTokens() + totalTokens);
+                    }
+
+                    messageRepository.save(aiMessage);
+                })
+                // sem isso o stream pode rodar na thread da requisição: os envios feitos antes do
+                // controller retornar ficam em buffer no SseEmitter e saem todos de uma vez
+                .subscribeOn(Schedulers.boundedElastic())
+                .subscribe(
+                        text -> {
+                            try {
+                                emitter.send(text);
+                            } catch (IOException e) {
+                                emitter.completeWithError(e);
+                            }
+                        },
+                        error -> {
+                            // o advice não alcança erros do stream: manda um evento "error" antes de fechar
+                            try {
+                                emitter.send(SseEmitter.event()
+                                        .name("error")
+                                        .data(new ErrorResponse("TECHNICAL_ERROR", error.getMessage())));
+                            } catch (IOException ignored) {
+                                // cliente já desconectou
+                            }
+                            emitter.complete();
+                        },
+                        emitter::complete
+                );
+
+        return emitter;
 
         // Primeiro subir apenas os Agents de IA sem utilizar o tool caling e alterando dados do banco
         // depois tentar adicionar para chamar o toolCalling

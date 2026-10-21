@@ -1,24 +1,23 @@
 package br.com.aisaas.conversation.api;
 
-import br.com.aisaas.conversation.api.dto.ConversationDetailResponse;
-import br.com.aisaas.conversation.api.dto.ConversationSummaryResponse;
-import br.com.aisaas.conversation.api.dto.CreateConversationRequest;
-import br.com.aisaas.conversation.api.dto.CreateConversationResponse;
+import br.com.aisaas.conversation.api.dto.*;
 import br.com.aisaas.conversation.application.ChatService;
 import br.com.aisaas.conversation.application.ConversationCommandService;
 import br.com.aisaas.conversation.application.ConversationQueryService;
 import br.com.aisaas.conversation.domain.Conversation;
+import br.com.aisaas.conversation.domain.ConversationStatus;
 import br.com.aisaas.conversation.domain.Message;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+
 
 @RestController
 public class ConversationController {
@@ -37,12 +36,17 @@ public class ConversationController {
 
         long userId = Long.parseLong(jwt.getSubject());
 
-        List<ConversationSummaryResponse> conversationSummaryResponse = conversationQueryService.listAllChats(userId).stream()
+        List<Conversation> conversations = conversationQueryService.listAllChats(userId);
+
+        java.util.Map<Long, String> lastMessages = chatService.lastUserMessages(conversations.stream().map(Conversation::getId).toList());
+
+        List<ConversationSummaryResponse> conversationSummaryResponse = conversations.stream()
                 .map(n -> new ConversationSummaryResponse(
                         n.getId(),
                         n.getUserId(),
                         n.getTitle(),
-                        n.getStatus()
+                        n.getStatus(),
+                        lastMessages.get(n.getId())
                 ))
                 .toList();
 
@@ -117,13 +121,56 @@ public class ConversationController {
 
     }
 
-    //    Falta implementar o resto das rotas
-    //    POST	/api/conversations/{id}/messages	{ content, agentId? }	200 (ou 201), a mensagem do assistente (MessageResponse)	401, 404, 409 (arquivada, agente inativo ou nenhum disponível), 422, erro de IA
-    //    PATCH	/api/conversations/{id}	{ title }	200, ConversationSummaryResponse atualizado	401, 404, 422
-    //    POST	/api/conversations/{id}/archive	Sem body	204	401, 404
-    //    POST	/api/conversations/{id}/unarchive	Sem body	204	401, 404
-    //    DELETE	/api/conversations/{id}	Sem body	204
+    @PatchMapping("/api/conversations/{id}")
+    public ResponseEntity<ConversationSummaryResponse> renameConversation(@PathVariable long id, @Valid @RequestBody AlterTitleRequest alterTitleRequest, @AuthenticationPrincipal Jwt jwt){
+        long userId = Long.parseLong(jwt.getSubject());
 
+        Conversation renamed = conversationCommandService.renameTitle(id, alterTitleRequest, userId);
+
+        return ResponseEntity.ok().body(new ConversationSummaryResponse(
+                renamed.getId(),
+                renamed.getUserId(),
+                renamed.getTitle(),
+                renamed.getStatus()
+        ));
+    }
+
+    @PostMapping(value = "/api/conversations/{id}/messages", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter sendMessage(@PathVariable long id, @Valid @RequestBody SendMessageRequest sendMessageRequest, @AuthenticationPrincipal Jwt jwt){
+        long userId = Long.parseLong(jwt.getSubject());
+
+        Conversation conversation = conversationCommandService.findByIdAndUserId(id, userId);
+
+        return chatService.orquestratorMessage(id, sendMessageRequest, userId);
+    }
+
+
+    @PostMapping("/api/conversations/{id}/archive")
+    public ResponseEntity<Object> setArchiveConversation(@PathVariable long id, @AuthenticationPrincipal Jwt jwt){
+        Long userId = Long.parseLong(jwt.getSubject());
+
+        conversationCommandService.alterStatus(id, ConversationStatus.ARCHIVED, userId);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/api/conversations/{id}/unarchive")
+    public ResponseEntity<Object> setUnarchiveConversation(@PathVariable long id, @AuthenticationPrincipal Jwt jwt){
+        Long userId = Long.parseLong(jwt.getSubject());
+
+        conversationCommandService.alterStatus(id, ConversationStatus.ACTIVE, userId);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/api/conversations/{id}")
+    public ResponseEntity<Object> deleteConversation(@PathVariable long id, @AuthenticationPrincipal Jwt jwt){
+        Long userId = Long.parseLong(jwt.getSubject());
+
+        conversationCommandService.deleteConversation(id, userId);
+
+        return ResponseEntity.noContent().build();
+    }
 
 
 }

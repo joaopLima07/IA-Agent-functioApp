@@ -33,11 +33,21 @@ public class Message {
 
     private int latencyMs;
 
+    private int totalToken;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 
     public void setAgentId(Long agentId) {
         this.agentId = agentId;
+    }
+
+    public int getTotalToken() {
+        return totalToken;
+    }
+
+    public void setTotalToken(int totalToken) {
+        this.totalToken = totalToken;
     }
 
     public int getInputToken() {
