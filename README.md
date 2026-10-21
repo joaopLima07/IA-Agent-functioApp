@@ -392,11 +392,6 @@ src/main/java/br/com/aisaas
 
 ## Próximos passos
 
-- Criação e exclusão de agentes (hoje só é possível listar, ver e editar).
-- Ferramentas, fontes de conhecimento e permissões dos agentes.
+- Ferramentas dos agentes.
 - Endpoint de organização.
-- Restrição do painel e da edição de agentes a `OWNER`/`ADMIN` no backend (hoje só o frontend esconde essas telas), e `ddl-auto=validate` em produção com migrações versionadas.
-- Regra de validação de mensagem (`InvalidMessageException`) e tradução de `AgentNotFoundException` no módulo de conversas.
-- `updatedAt` e prévia da última mensagem na listagem de conversas.
 - Painel: taxa de resolução e resultados de chamadas de ferramentas (dependem de definir o que é "resolvida" e de existir tool calling).
-- Base de conhecimento, usando o Spring AI.
