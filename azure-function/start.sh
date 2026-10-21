@@ -1,10 +1,7 @@
 #!/bin/sh
-# Sobe o Spring Boot como custom handler. Tudo que sai aqui vai para o log do Function App
-# e tambem para /home/LogFiles/start.log (legivel pelo Kudu), caso o log stream nao mostre.
-LOG=/home/LogFiles/start.log
+# Sobe o Spring Boot como custom handler. O que sai aqui aparece no log do Function App.
 log() {
   echo "[start.sh] $*"
-  echo "[start.sh] $*" >> "$LOG" 2>/dev/null
 }
 
 PORT_HANDLER="${FUNCTIONS_CUSTOMHANDLER_PORT:-8080}"
