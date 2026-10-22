@@ -393,5 +393,4 @@ src/main/java/br/com/aisaas
 ## Próximos passos
 
 - Ferramentas dos agentes.
-- Endpoint de organização.
 - Painel: taxa de resolução e resultados de chamadas de ferramentas (dependem de definir o que é "resolvida" e de existir tool calling).

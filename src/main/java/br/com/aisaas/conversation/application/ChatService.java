@@ -104,6 +104,8 @@ public class ChatService {
         }
     }
 
+
+
     public SseEmitter orquestratorMessage(long id, SendMessageRequest sendMessageRequest, long userId){
         long start = System.nanoTime();
 

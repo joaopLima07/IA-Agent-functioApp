@@ -3,6 +3,7 @@ package br.com.aisaas.conversation.application;
 
 import br.com.aisaas.agent.domain.Agent;
 import br.com.aisaas.conversation.domain.exceptions.GeminiAPINotRespondException;
+import br.com.aisaas.conversation.tools.AllTools;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.model.ChatModel;
@@ -17,9 +18,11 @@ import java.util.List;
 @Component
 public class ReplyGeneretor {
     private final ChatClient chatClient;
+    private final AllTools allTools;
 
-    public ReplyGeneretor(ChatModel chatModel) {
+    public ReplyGeneretor(ChatModel chatModel, AllTools allTools) {
         this.chatClient = ChatClient.create(chatModel);
+        this.allTools = allTools;
     }
 
     public Flux<ChatResponse> finalMessage(Agent agentRouter, List<org.springframework.ai.chat.messages.Message> fiveLastMessage){
@@ -31,6 +34,7 @@ public class ReplyGeneretor {
                         .maxOutputTokens(agentRouter.getMaxTokens()))
                 .system(agentRouter.getSystemPrompt())
                 .messages(fiveLastMessage)
+                .tools(allTools)
                 .stream()
                 .chatResponse()
                 .onErrorMap(e -> new GeminiAPINotRespondException(e.getMessage()));
