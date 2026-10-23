@@ -26,7 +26,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 @Service
 public class ChatService {
@@ -65,13 +67,13 @@ public class ChatService {
     }
 
 
-    public java.util.Map<Long, String> lastUserMessages(List<Long> conversationIds){
+    public Map<Long, String> lastUserMessages(List<Long> conversationIds){
         if (conversationIds.isEmpty()){
-            return java.util.Map.of();
+            return Map.of();
         }
 
         return messageRepository.lastUserMessages(conversationIds).stream()
-                .collect(java.util.stream.Collectors.toMap(Message::getConversationId, Message::getContent, (a, b) -> a));
+                .collect(Collectors.toMap(Message::getConversationId, Message::getContent, (a, b) -> a));
     }
 
     Conversation checkMessage(long id, long userId){
@@ -104,7 +106,31 @@ public class ChatService {
         }
     }
 
+    String listAllAgent(List<Agent> allAgents){
+        StringBuilder promptAgentsBuilder = new StringBuilder();
 
+        for (Agent allAgent : allAgents){
+            promptAgentsBuilder.append("id: ")
+                    .append(allAgent.getId())
+                    .append(" | nome: ")
+                    .append(allAgent.getName())
+                    .append(" | descrição: ")
+                    .append(allAgent.getDescription())
+                    .append("\n");
+        }
+
+        return promptAgentsBuilder.toString();
+    }
+
+    String promptLastMessage(List<Message> lastMessage){
+        String promptFiveMessage = "";
+
+        for (Message message1 : lastMessage){
+            promptFiveMessage += message1.getRole() + ": " + message1.getContent() + " | AgentId: " + message1.getAgentId() + "\n";
+        }
+
+        return promptFiveMessage;
+    }
 
     public SseEmitter orquestratorMessage(long id, SendMessageRequest sendMessageRequest, long userId){
         long start = System.nanoTime();
@@ -121,29 +147,9 @@ public class ChatService {
 
         List<Message> last5Message = lastMessages(message.getConversationId(), 5);
 
-        List<Agent> allAgents = agentQueryService.searchAll();
+        String promptAgents = listAllAgent(agentQueryService.searchAll());
 
-
-        StringBuilder promptAgentsBuilder = new StringBuilder();
-
-        for (Agent allAgent : allAgents){
-            promptAgentsBuilder.append("id: ")
-                    .append(allAgent.getId())
-                    .append(" | nome: ")
-                    .append(allAgent.getName())
-                    .append(" | descrição: ")
-                    .append(allAgent.getDescription())
-                    .append("\n");
-        }
-
-        String promptAgents = promptAgentsBuilder.toString();
-
-
-        String promptFiveMessage = "";
-
-        for (Message message1 : last5Message){
-            promptFiveMessage += message1.getRole() + ": " + message1.getContent() + " | AgentId: " + message1.getAgentId() + "\n";
-        }
+        String promptFiveMessage = promptLastMessage(last5Message);
 
         Agent routerAgent = agentQueryService.findRouterAgent();
 

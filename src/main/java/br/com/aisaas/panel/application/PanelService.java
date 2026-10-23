@@ -2,7 +2,6 @@ package br.com.aisaas.panel.application;
 
 import br.com.aisaas.panel.api.dto.*;
 import br.com.aisaas.panel.infra.PanelRepository;
-import org.hibernate.tool.schema.spi.JpaTargetAndSourceDescriptor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
