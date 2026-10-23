@@ -1,7 +1,4 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/azure/functions-action
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
-name: Build and deploy Java project to Azure Function App - AI-Agent
+name: Build and deploy Spring Boot (custom handler) to Azure Function App - AI-Agent
 
 on:
   push:
@@ -10,33 +7,42 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_FUNCTIONAPP_NAME: AI-Agent # set this to your function app name on Azure
-  PACKAGE_DIRECTORY: '.' # set this to the directory which contains pom.xml file
-  JAVA_VERSION: '21' # set this to the java version to use
+  AZURE_FUNCTIONAPP_NAME: AI-Agent
+  JAVA_VERSION: '21'
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
+      id-token: write # necessario para o login OIDC no Azure
+      contents: read
 
     steps:
-      - name: 'Checkout GitHub Action'
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Java Sdk ${{ env.JAVA_VERSION }}
-        uses: actions/setup-java@v1
-        with: |+
+      - name: Setup Java ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
 
-      - name: 'Restore Project Dependencies Using Mvn'
-        shell: pwsh
-        run: |+
-          pushd './${{ env.PACKAGE_DIRECTORY }}'
-          mvn clean package
-          popd
-      
+      - name: Build do jar
+        run: mvn -B clean package -DskipTests
+
+      - name: Monta o pacote do Function App
+        run: |
+          rm -rf package
+          mkdir -p package
+          cp -r azure-function/. package/
+          cp target/*.jar package/app.jar
+          # start.sh usa ./jre se existir (o Function App nao garante Java no custom handler)
+          cp -r "$JAVA_HOME" package/jre
+          rm -rf package/jre/lib/src.zip package/jre/jmods
+          chmod +x package/start.sh
+          ls -la package
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -44,12 +50,9 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_1BA2A32A8DFF40749C96331C86288AC5 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_F3B4518A459442298566D945F9398B2A }}
 
-      - name: 'Run Azure Functions Action'
+      - name: Deploy no Azure Functions
         uses: Azure/functions-action@v1
-        id: fa
         with:
-          app-name: 'AI-Agent'
-          slot-name: 'Production'
-          package: '${{ env.PACKAGE_DIRECTORY }}'
-          respect-pom-xml: true
-          
+          app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
+          slot-name: Production
+          package: package
