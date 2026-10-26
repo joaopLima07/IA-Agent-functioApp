@@ -10,6 +10,11 @@ env:
   AZURE_FUNCTIONAPP_NAME: AI-Agent
   JAVA_VERSION: '21'
 
+# evita que dois deploys rodem juntos e um sobrescreva o pacote do outro
+concurrency:
+  group: deploy-ai-agent
+  cancel-in-progress: true
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -38,8 +43,7 @@ jobs:
           cp -r azure-function/. package/
           cp target/*.jar package/app.jar
           # start.sh usa ./jre se existir (o Function App nao garante Java no custom handler)
-          cp -r "$JAVA_HOME" package/jre
-          rm -rf package/jre/lib/src.zip package/jre/jmods
+          jlink --add-modules ALL-MODULE-PATH --strip-debug --no-man-pages --no-header-files --compress=zip-6 --output package/jre
           chmod +x package/start.sh
           ls -la package
 
