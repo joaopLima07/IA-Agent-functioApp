@@ -87,7 +87,7 @@ class AgentQueryServiceTest {
         InvalidAgentConfigException ex = assertThrows(InvalidAgentConfigException.class,
                 () -> service.updateAgent(1L, request(1, 2.1)));
 
-        assertEquals("The Temperature is upper than valid.", ex.getMessage());
+        assertEquals(InvalidAgentConfigException.TEMPERATURE_TOO_HIGH, ex.getMessage());
         verify(repository, never()).save(any());
     }
 

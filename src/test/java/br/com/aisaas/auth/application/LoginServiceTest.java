@@ -68,7 +68,7 @@ class LoginServiceTest {
         InvalidCredentialsException ex = assertThrows(InvalidCredentialsException.class,
                 () -> service.login(new LoginRequest("joao@example.com", PASSWORD)));
 
-        assertEquals("Invalid e-mail or password.", ex.getMessage());
+        assertEquals("E-mail ou senha inválidos.", ex.getMessage());
         verify(passwordPolicy).burnPasswordCheck(PASSWORD);
         verifyNoInteractions(jwtTokenService);
     }
@@ -80,7 +80,7 @@ class LoginServiceTest {
         InvalidCredentialsException ex = assertThrows(InvalidCredentialsException.class,
                 () -> service.login(new LoginRequest("joao@example.com", "Wrong1234!")));
 
-        assertEquals("Invalid e-mail or password.", ex.getMessage());
+        assertEquals("E-mail ou senha inválidos.", ex.getMessage());
         verifyNoInteractions(jwtTokenService);
     }
 

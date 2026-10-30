@@ -269,7 +269,8 @@ class ConversationControllerTest {
 
     @Test
     void returns404WhenSendingAMessageToAnUnknownConversation() throws Exception {
-        when(commandService.findByIdAndUserId(99L, USER_ID)).thenThrow(new ConversationNotFoundException("not found"));
+        when(chatService.orquestratorMessage(eq(99L), any(), eq(USER_ID)))
+                .thenThrow(new ConversationNotFoundException("not found"));
 
         mvc.perform(post("/api/conversations/99/messages").contentType(MediaType.APPLICATION_JSON)
                         .content("{\"content\":\"hi\"}"))

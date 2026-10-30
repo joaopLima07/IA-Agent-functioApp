@@ -97,7 +97,7 @@ class AgentControllerTest {
     @Test
     void returns422WhenTemperatureIsAboveLimit() throws Exception {
         when(service.updateAgent(eq(1L), any()))
-                .thenThrow(new InvalidAgentConfigException("The Temperature is upper than valid."));
+                .thenThrow(new InvalidAgentConfigException(InvalidAgentConfigException.TEMPERATURE_TOO_HIGH));
 
         update(1, VALID_BODY).andExpect(status().isUnprocessableEntity());
     }
