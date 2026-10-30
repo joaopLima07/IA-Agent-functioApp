@@ -8,12 +8,14 @@ import br.com.aisaas.conversation.domain.Conversation;
 import br.com.aisaas.conversation.domain.ConversationStatus;
 import br.com.aisaas.conversation.domain.Message;
 import jakarta.validation.Valid;
+import org.springframework.ai.content.Media;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.List;
@@ -135,13 +137,18 @@ public class ConversationController {
         ));
     }
 
-    @PostMapping(value = "/api/conversations/{id}/messages", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @PostMapping(value = "/api/conversations/{id}/messages", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter sendMessage(@PathVariable long id, @Valid @RequestBody SendMessageRequest sendMessageRequest, @AuthenticationPrincipal Jwt jwt){
         long userId = Long.parseLong(jwt.getSubject());
 
-        Conversation conversation = conversationCommandService.findByIdAndUserId(id, userId);
+        return chatService.orquestratorMessage(id, sendMessageRequest, userId, null);
+    }
 
-        return chatService.orquestratorMessage(id, sendMessageRequest, userId);
+    @PostMapping(value = "/api/conversations/{id}/messages", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter sendMessageWithFile(@PathVariable long id, @Valid @RequestPart("request") SendMessageRequest sendMessageRequest, @RequestPart("file") MultipartFile file, @AuthenticationPrincipal Jwt jwt){
+        long userId = Long.parseLong(jwt.getSubject());
+
+        return chatService.orquestratorMessage(id, sendMessageRequest, userId, file);
     }
 
 
