@@ -42,7 +42,7 @@ public class AgentRouter {
                     .chatResponse();
 
         } catch (Exception e){
-            throw new GeminiAPINotRespondException("The Gemini API not respond");
+            throw new GeminiAPINotRespondException("The Gemini API not respond", e);
         }
 
     }

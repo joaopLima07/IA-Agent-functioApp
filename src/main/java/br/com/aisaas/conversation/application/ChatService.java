@@ -8,29 +8,34 @@ import br.com.aisaas.conversation.domain.Message;
 import br.com.aisaas.conversation.domain.MessageRole;
 import br.com.aisaas.conversation.domain.exceptions.ConversationNotFoundException;
 import br.com.aisaas.conversation.domain.exceptions.InvalidRouterResponseException;
+import br.com.aisaas.conversation.domain.exceptions.MediaTypeNotSuportedException;
 import br.com.aisaas.conversation.infra.ConversationRepository;
 import br.com.aisaas.conversation.infra.MessageRepository;
 import br.com.aisaas.shared.api.dto.ErrorResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.metadata.Usage;
 import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.content.Media;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.util.MimeTypeUtils;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import reactor.core.scheduler.Schedulers;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Service
 public class ChatService {
-
+    private static final Logger log = LoggerFactory.getLogger(ChatService.class);
 
     private final MessageRepository messageRepository;
     private final ConversationRepository conversationRepository;
@@ -79,12 +84,24 @@ public class ChatService {
                 .orElseThrow(() -> new ConversationNotFoundException("This conversation could not be found for this user."));
     }
 
-    List<org.springframework.ai.chat.messages.Message> toAiMessages(List<Message> history){
+    List<org.springframework.ai.chat.messages.Message> toAiMessages(List<Message> history, Media media){
         List<org.springframework.ai.chat.messages.Message> result = new ArrayList<>();
-        for (Message m : history){
+        for (int i = 0; i < history.size(); i++){
+            Message m = history.get(i);
+            boolean isCurrent = i == history.size() - 1;
+
             if (m.getRole() == MessageRole.USER){
-                result.add(new UserMessage(m.getContent()));
-            } else {
+                if(isCurrent && media != null){
+                    String text = (m.getContent() == null || m.getContent().isBlank()
+                    ? "Analise o arquivo anexado"
+                    : m.getContent());
+
+                    result.add(UserMessage.builder().text(text).media(media).build());
+                } else if (m.getContent() != null && !m.getContent().isBlank()) {
+                    // o Gemini rejeita com 400 uma parte de texto vazia (ex.: mensagem antiga enviada só com arquivo)
+                    result.add(new UserMessage(m.getContent()));
+                }
+            } else if (m.getContent() != null && !m.getContent().isBlank()) {
                 result.add(new AssistantMessage(m.getContent()));
             }
         }
@@ -104,7 +121,54 @@ public class ChatService {
         }
     }
 
-    public SseEmitter orquestratorMessage(long id, SendMessageRequest sendMessageRequest, long userId){
+    String listAllAgent(List<Agent> allAgents){
+        StringBuilder promptAgentsBuilder = new StringBuilder();
+
+        for (Agent allAgent : allAgents){
+            promptAgentsBuilder.append("id: ")
+                    .append(allAgent.getId())
+                    .append(" | nome: ")
+                    .append(allAgent.getName())
+                    .append(" | descrição: ")
+                    .append(allAgent.getDescription())
+                    .append("\n");
+        }
+
+        return promptAgentsBuilder.toString();
+    }
+
+    String promptLastMessage(List<Message> lastMessage){
+        String promptFiveMessage = "";
+
+        for (Message message1 : lastMessage){
+            promptFiveMessage += message1.getRole() + ": " + message1.getContent() + " | AgentId: " + message1.getAgentId() + "\n";
+        }
+
+        return promptFiveMessage;
+    }
+
+    void verifyFileExtension(MultipartFile media){
+        if (media != null){
+            String fileName = media.getOriginalFilename();
+
+            if (fileName == null || !fileName.contains(".")){
+                throw new MediaTypeNotSuportedException("It does not accept this file.");
+            }
+
+            String fileExtension = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
+
+            List<String> extensions = List.of("pdf", "png", "jpg", "jpeg", "pptx", "docx");
+
+            if (!extensions.contains(fileExtension)){
+                throw new MediaTypeNotSuportedException("It does not accept this file.");
+            }
+        }
+    }
+
+    public SseEmitter orquestratorMessage(long id, SendMessageRequest sendMessageRequest, long userId, MultipartFile media) {
+
+        verifyFileExtension(media);
+
         long start = System.nanoTime();
 
         Conversation conversation = checkMessage(id, userId);
@@ -119,29 +183,9 @@ public class ChatService {
 
         List<Message> last5Message = lastMessages(message.getConversationId(), 5);
 
-        List<Agent> allAgents = agentQueryService.searchAll();
+        String promptAgents = listAllAgent(agentQueryService.searchAll());
 
-
-        StringBuilder promptAgentsBuilder = new StringBuilder();
-
-        for (Agent allAgent : allAgents){
-            promptAgentsBuilder.append("id: ")
-                    .append(allAgent.getId())
-                    .append(" | nome: ")
-                    .append(allAgent.getName())
-                    .append(" | descrição: ")
-                    .append(allAgent.getDescription())
-                    .append("\n");
-        }
-
-        String promptAgents = promptAgentsBuilder.toString();
-
-
-        String promptFiveMessage = "";
-
-        for (Message message1 : last5Message){
-            promptFiveMessage += message1.getRole() + ": " + message1.getContent() + " | AgentId: " + message1.getAgentId() + "\n";
-        }
+        String promptFiveMessage = promptLastMessage(last5Message);
 
         Agent routerAgent = agentQueryService.findRouterAgent();
 
@@ -165,7 +209,24 @@ public class ChatService {
         StringBuilder fullText = new StringBuilder();
         AtomicReference<Usage> lastUsage = new AtomicReference<>();
 
-        List<org.springframework.ai.chat.messages.Message> toAiMessage = toAiMessages(last5Message);
+        // TODO adicionar para aqui ele enviar a media
+
+
+            Media file = null;
+            if(media != null && !media.isEmpty()){
+                try {
+                    byte[] head = Arrays.copyOf(media.getBytes(), (int) Math.min(8, media.getSize()));
+                    log.info("Upload received: name={} size={} contentType={} header={}",
+                            media.getOriginalFilename(), media.getSize(), media.getContentType(),
+                            new String(head, java.nio.charset.StandardCharsets.ISO_8859_1));
+                    file = new Media(MimeTypeUtils.parseMimeType(media.getContentType()),
+                            new ByteArrayResource(media.getBytes()));
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+        List<org.springframework.ai.chat.messages.Message> toAiMessage = toAiMessages(last5Message, file);
 
         SseEmitter emitter = new SseEmitter(120_000L);
 
