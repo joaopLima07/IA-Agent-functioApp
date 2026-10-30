@@ -32,6 +32,7 @@ import reactor.core.scheduler.Schedulers;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 @Service
 public class ChatService {
@@ -53,6 +54,8 @@ public class ChatService {
     }
 
 
+
+
     public List<Message> lastMessages(long conversationId, int pageSize){
         Pageable limit = PageRequest.of(0, pageSize);
 
@@ -70,13 +73,13 @@ public class ChatService {
     }
 
 
-    public java.util.Map<Long, String> lastUserMessages(List<Long> conversationIds){
+    public Map<Long, String> lastUserMessages(List<Long> conversationIds){
         if (conversationIds.isEmpty()){
-            return java.util.Map.of();
+            return Map.of();
         }
 
         return messageRepository.lastUserMessages(conversationIds).stream()
-                .collect(java.util.stream.Collectors.toMap(Message::getConversationId, Message::getContent, (a, b) -> a));
+                .collect(Collectors.toMap(Message::getConversationId, Message::getContent, (a, b) -> a));
     }
 
     Conversation checkMessage(long id, long userId){

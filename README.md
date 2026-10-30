@@ -4,7 +4,7 @@
 
 # AI Nexus — Backend
 
-API em Java 21 + Spring Boot da plataforma SaaS B2B AI Nexus, em que empresas configuram e conversam com agentes de IA especializados. Este repositório contém apenas o backend; o frontend fica em outro repositório, e o repositório central reúne a visão geral do projeto.
+API em Java 21 + Spring Boot da plataforma SaaS B2B AI Nexus, em que empresas configuram e conversam com agentes de IA especializados. Este repositório contém apenas o backend; o frontend fica no [repositório do frontend](https://github.com/joaopLima07/IA-AgentWebApp), e o [repositório central](https://github.com/joaopLima07/IA-Agent) reúne a visão geral do projeto. O frontend publicado fica em https://witty-coast-0d3519b10.5.azurestaticapps.net.
 
 **Estado:** autenticação (refresh token e recuperação de senha por e-mail), agentes (listar, ver e editar), conversas (listar, abrir, carregar mensagens antigas, criar, renomear, arquivar, desarquivar e excluir), envio de mensagens com resposta em streaming (roteador de agentes + Gemini) e painel de métricas prontos. Ferramentas, fontes de conhecimento e permissões dos agentes ainda não existem.
 
@@ -29,7 +29,7 @@ Java 21, Spring Boot 4.1.1 (Web MVC, Data JPA, Validation, OAuth2 Resource Serve
 
 Pré-requisitos: JDK 21 e um PostgreSQL acessível (a conexão usa `sslmode=require`).
 
-O perfil ativo por padrão é `dev`. Defina as variáveis de ambiente:
+Nenhum perfil vem ativo por padrão: o que está em `application.properties` é a configuração de produção. Para rodar localmente, ative o perfil `dev` (`SPRING_PROFILES_ACTIVE=dev`) e defina as variáveis de ambiente:
 
 | Variável         | Descrição                                                                                  |
 |------------------|--------------------------------------------------------------------------------------------|
@@ -51,12 +51,14 @@ $env:USER = "usuario"; $env:PASSWORD = "sua-senha"
 $env:JWT = "um-segredo-com-pelo-menos-32-caracteres"
 $env:MAIL_USERNAME = "conta@gmail.com"; $env:MAIL_PASSWORD = "senha-de-app"
 $env:GEMINI_API_KEY = "sua-chave"
+$env:SPRING_PROFILES_ACTIVE = "dev"
+$env:REFRESH_TOKEN_COOKIE_SAME_SITE = "Lax"
 ./mvnw spring-boot:run
 ```
 
 Na IDE, defina as mesmas variáveis na configuração de execução (no IntelliJ: *Run > Edit Configurations > Environment variables*).
 
-O schema é criado e atualizado automaticamente no perfil `dev` (`ddl-auto=update`), que também imprime o SQL no log. A validade do access token é configurada em `jwt.expiration-seconds` (padrão `900`).
+O perfil `dev` cria e atualiza o schema automaticamente (`ddl-auto=update`), imprime o SQL no log e desliga o cookie `Secure`. Como `application.properties` usa `SameSite=None` (exigido em produção, onde frontend e API ficam em sites diferentes) e navegadores recusam `SameSite=None` sem `Secure`, em HTTP local também é preciso `REFRESH_TOKEN_COOKIE_SAME_SITE=Lax`, como no exemplo acima. A validade do access token é configurada em `jwt.expiration-seconds` (padrão `900`).
 
 Propriedades do refresh token (prefixo `refresh-token.`):
 
@@ -64,10 +66,10 @@ Propriedades do refresh token (prefixo `refresh-token.`):
 |--------------------|-------------|------------------------------------------------------------------|
 | `ttl`              | `7d`        | Validade do refresh token e do cookie.                           |
 | `cookie-secure`    | `true`      | Envia o cookie só por HTTPS. O perfil `dev` define `false`.      |
-| `cookie-same-site` | `Lax`       | Atributo `SameSite` do cookie.                                   |
+| `cookie-same-site` | `None`      | Atributo `SameSite` do cookie. Em `application.properties` é `None` (frontend e API em sites diferentes); use `Lax` localmente. |
 | `cookie-path`      | `/api/auth` | Caminho em que o cookie é enviado.                               |
 
-A API sobe na porta `8080` e o Swagger UI fica em `http://localhost:8080/swagger-ui.html`. O backend não configura CORS: o frontend em desenvolvimento acessa a API por um proxy de `/api` (Vite), e em produção `/api` precisa ser encaminhado para esta aplicação. O cadastro exige telefone em formato internacional (ex.: `+5511999999999`) e senha com letra e número.
+A API sobe na porta `8080` e o Swagger UI fica em `http://localhost:8080/swagger-ui.html`. O Spring desativa o CORS (`SecurityConfig`): em desenvolvimento o frontend acessa a API por um proxy de `/api` (Vite), e em produção as origens permitidas são configuradas no próprio Function App (Portal do Azure > API > CORS), com credenciais habilitadas por causa do cookie de refresh. O cadastro exige telefone em formato internacional (ex.: `+5511999999999`) e senha com letra e número.
 
 ### Dados que o chat espera no banco
 
@@ -86,11 +88,14 @@ A API sobe na porta `8080` e o Swagger UI fica em `http://localhost:8080/swagger
 
 ## Deploy
 
-O workflow `.github/workflows/main_ai-agent.yml` compila o projeto com Java 21 e publica o `.jar` no Azure Web App `AI-Agent-App` a cada push na branch `main` (ou manualmente, por `workflow_dispatch`).
+O workflow `.github/workflows/` compila o projeto com Java 21 e publica no **Azure Function App `AI-Agent`** a cada push na branch `main` (ou manualmente, por `workflow_dispatch`). O Spring Boot roda como *custom handler* do Azure Functions:
 
-No Azure, as variáveis da tabela acima são configuradas como *Application settings* do Web App, e o Spring as lê como variáveis de ambiente.
+1. `mvn clean package -DskipTests` gera o `.jar`.
+2. O pacote é montado com `azure-function/host.json`, `azure-function/start.sh`, `azure-function/proxy/function.json` (uma rota `{*route}` que repassa todas as requisições HTTP) e o jar como `app.jar`.
+3. Um JRE enxuto, gerado com `jlink`, vai dentro do pacote (`jre/`), porque a imagem do custom handler não garante Java instalado. O `start.sh` prefere esse JRE e sobe `java -jar app.jar` na porta `FUNCTIONS_CUSTOMHANDLER_PORT` (padrão `8080`), registrando o início no log do Function App.
+4. O login no Azure usa OIDC (`azure/login`), com os segredos do repositório.
 
-> O perfil `dev` é o padrão (`spring.profiles.active=dev` em `application.properties`), inclusive em produção. Ele define `refresh-token.cookie-secure=false`, `ddl-auto=update` e `show-sql=true`. Para trocar, defina `SPRING_PROFILES_ACTIVE` no Azure e crie o `application-prod.properties` correspondente (ainda não existe).
+As variáveis da tabela acima são configuradas como *Application settings* do Function App, e o Spring as lê como variáveis de ambiente. Em produção nenhum perfil é ativado: o cookie de refresh é `Secure` + `SameSite=None` e o schema não é alterado automaticamente.
 
 ## API
 
@@ -387,11 +392,5 @@ src/main/java/br/com/aisaas
 
 ## Próximos passos
 
-- Criação e exclusão de agentes (hoje só é possível listar, ver e editar).
-- Ferramentas, fontes de conhecimento e permissões dos agentes.
-- Endpoint de organização.
-- Perfil `prod` (cookie seguro, `ddl-auto=validate`, sem SQL no log) e restrição do painel a `OWNER`/`ADMIN`.
-- Regra de validação de mensagem (`InvalidMessageException`) e tradução de `AgentNotFoundException` no módulo de conversas.
-- `updatedAt` e prévia da última mensagem na listagem de conversas.
+- Ferramentas dos agentes.
 - Painel: taxa de resolução e resultados de chamadas de ferramentas (dependem de definir o que é "resolvida" e de existir tool calling).
-- Base de conhecimento, usando o Spring AI.

@@ -2,15 +2,12 @@ package br.com.aisaas.conversation.application;
 
 import br.com.aisaas.agent.domain.Agent;
 import br.com.aisaas.conversation.domain.exceptions.GeminiAPINotRespondException;
-import br.com.aisaas.conversation.domain.exceptions.InvalidRouterResponseException;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.google.genai.GoogleGenAiChatOptions;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 
 @Component
 public class AgentRouter {
