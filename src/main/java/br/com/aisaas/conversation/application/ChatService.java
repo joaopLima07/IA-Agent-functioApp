@@ -64,6 +64,7 @@ public class ChatService {
                 .toList();
     }
 
+
     public List<Message> lastMessagesBefore(long id, long messageId){
         Pageable pageable = PageRequest.of(0, 30);
 
@@ -82,10 +83,12 @@ public class ChatService {
                 .collect(Collectors.toMap(Message::getConversationId, Message::getContent, (a, b) -> a));
     }
 
+
     Conversation checkMessage(long id, long userId){
         return conversationRepository.findByIdAndUserId(id, userId)
                 .orElseThrow(() -> new ConversationNotFoundException("This conversation could not be found for this user."));
     }
+
 
     List<org.springframework.ai.chat.messages.Message> toAiMessages(List<Message> history, Media media){
         List<org.springframework.ai.chat.messages.Message> result = new ArrayList<>();
@@ -112,6 +115,7 @@ public class ChatService {
         return result;
     }
 
+
     long parseAgentId(String response){
         if (response == null || response.isBlank()){
             throw new InvalidRouterResponseException("The router returned an empty response.");
@@ -123,6 +127,7 @@ public class ChatService {
             throw new InvalidRouterResponseException("The router did not return a valid agent id: " + response);
         }
     }
+
 
     String listAllAgent(List<Agent> allAgents){
         StringBuilder promptAgentsBuilder = new StringBuilder();
@@ -140,6 +145,7 @@ public class ChatService {
         return promptAgentsBuilder.toString();
     }
 
+
     String promptLastMessage(List<Message> lastMessage){
         String promptFiveMessage = "";
 
@@ -149,6 +155,7 @@ public class ChatService {
 
         return promptFiveMessage;
     }
+
 
     void verifyFileExtension(MultipartFile media){
         if (media != null){
@@ -167,6 +174,14 @@ public class ChatService {
             }
         }
     }
+
+
+//    Object seachTool(long agentId){
+//        switch (agentId){
+//            case 17L:
+//                return
+//        }
+//    }
 
     public SseEmitter orquestratorMessage(long id, SendMessageRequest sendMessageRequest, long userId, MultipartFile media) {
 

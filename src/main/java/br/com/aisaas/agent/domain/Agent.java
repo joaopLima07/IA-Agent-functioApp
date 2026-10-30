@@ -21,6 +21,7 @@ public class Agent {
     private String name;
 
     @NotBlank
+    @Column(columnDefinition = "TEXT")
     private String description;
 
     @Enumerated(EnumType.STRING)
