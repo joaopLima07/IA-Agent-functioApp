@@ -131,7 +131,7 @@ class ChatServiceTest {
                 message(MessageRole.USER, "hello", LocalDateTime.now()),
                 message(MessageRole.ASSISTANT, "hi there", LocalDateTime.now()));
 
-        List<org.springframework.ai.chat.messages.Message> result = service.toAiMessages(history);
+        List<org.springframework.ai.chat.messages.Message> result = service.toAiMessages(history, null);
 
         assertEquals(2, result.size());
         assertInstanceOf(UserMessage.class, result.get(0));
@@ -161,7 +161,7 @@ class ChatServiceTest {
         when(conversationRepository.findByIdAndUserId(1L, 7L)).thenReturn(Optional.empty());
 
         assertThrows(ConversationNotFoundException.class,
-                () -> service.orquestratorMessage(1L, new SendMessageRequest("hi"), 7L));
+                () -> service.orquestratorMessage(1L, new SendMessageRequest("hi"), 7L, null));
 
         verify(messageRepository, never()).save(any());
     }
@@ -179,7 +179,7 @@ class ChatServiceTest {
                 .thenReturn(chunk("no agent fits", new DefaultUsage(1, 1, 2)));
 
         assertThrows(InvalidRouterResponseException.class,
-                () -> service.orquestratorMessage(1L, new SendMessageRequest("hi"), 7L));
+                () -> service.orquestratorMessage(1L, new SendMessageRequest("hi"), 7L, null));
     }
 
     @Test
@@ -203,7 +203,7 @@ class ChatServiceTest {
                 chunk("Hello, ", null),
                 chunk("world", new DefaultUsage(20, 10, 30))));
 
-        SseEmitter emitter = service.orquestratorMessage(1L, new SendMessageRequest("hi"), 7L);
+        SseEmitter emitter = service.orquestratorMessage(1L, new SendMessageRequest("hi"), 7L, null);
 
         assertNotNull(emitter);
         // the reply is consumed on another thread, so wait for the assistant message to be saved
@@ -242,7 +242,7 @@ class ChatServiceTest {
                 .thenReturn(chunk("2", new DefaultUsage(10, 5, 15)));
         when(replyGeneretor.finalMessage(any(), any())).thenReturn(Flux.error(new RuntimeException("gemini down")));
 
-        service.orquestratorMessage(1L, new SendMessageRequest("hi"), 7L);
+        service.orquestratorMessage(1L, new SendMessageRequest("hi"), 7L, null);
 
         // only the user message is saved; give the async stream time to fail before checking
         verify(messageRepository, timeout(1000).times(1)).save(any(Message.class));

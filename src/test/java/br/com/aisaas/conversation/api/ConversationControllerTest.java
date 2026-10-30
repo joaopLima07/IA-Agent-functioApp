@@ -269,7 +269,7 @@ class ConversationControllerTest {
 
     @Test
     void returns404WhenSendingAMessageToAnUnknownConversation() throws Exception {
-        when(chatService.orquestratorMessage(eq(99L), any(), eq(USER_ID)))
+        when(chatService.orquestratorMessage(eq(99L), any(), eq(USER_ID), isNull()))
                 .thenThrow(new ConversationNotFoundException("not found"));
 
         mvc.perform(post("/api/conversations/99/messages").contentType(MediaType.APPLICATION_JSON)
@@ -280,7 +280,7 @@ class ConversationControllerTest {
     @Test
     void returns409WhenTheRouterDoesNotReturnAValidAgent() throws Exception {
         when(commandService.findByIdAndUserId(1L, USER_ID)).thenReturn(conversation(1L, "first", ConversationStatus.ACTIVE));
-        when(chatService.orquestratorMessage(eq(1L), any(), eq(USER_ID)))
+        when(chatService.orquestratorMessage(eq(1L), any(), eq(USER_ID), isNull()))
                 .thenThrow(new InvalidRouterResponseException("bad router answer"));
 
         mvc.perform(post("/api/conversations/1/messages").contentType(MediaType.APPLICATION_JSON)
@@ -292,7 +292,7 @@ class ConversationControllerTest {
     @Test
     void returns500WhenTheGeminiApiDoesNotRespond() throws Exception {
         when(commandService.findByIdAndUserId(1L, USER_ID)).thenReturn(conversation(1L, "first", ConversationStatus.ACTIVE));
-        when(chatService.orquestratorMessage(eq(1L), any(), eq(USER_ID)))
+        when(chatService.orquestratorMessage(eq(1L), any(), eq(USER_ID), isNull()))
                 .thenThrow(new GeminiAPINotRespondException("The Gemini API not respond"));
 
         mvc.perform(post("/api/conversations/1/messages").contentType(MediaType.APPLICATION_JSON)
