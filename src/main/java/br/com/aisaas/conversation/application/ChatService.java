@@ -11,6 +11,7 @@ import br.com.aisaas.conversation.domain.exceptions.InvalidRouterResponseExcepti
 import br.com.aisaas.conversation.domain.exceptions.MediaTypeNotSuportedException;
 import br.com.aisaas.conversation.infra.ConversationRepository;
 import br.com.aisaas.conversation.infra.MessageRepository;
+import br.com.aisaas.conversation.tools.*;
 import br.com.aisaas.shared.api.dto.ErrorResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,12 +46,29 @@ public class ChatService {
     private final ReplyGeneretor replyGeneretor;
 
 
-    public ChatService(MessageRepository messageRepository, ConversationRepository conversationRepository, AgentQueryService agentQueryService, ReplyGeneretor replyGeneretor, AgentRouter agentRouter) {
+    // Objetos para poder referenciar como tools para a resposta final da IA
+    private final FiscalAgentTool fiscalAgentTool;
+    private final RegisterAgentTool registerAgentTool;
+    private final TermAgentTool termAgentTool;
+    private final FinancialCalculationsAgentTool financialCalculationsAgentTool;
+    private final ExchangeAgentTool exchangeAgentTool;
+    private final ConferenceAgentTool conferenceAgentTool;
+    private final ListAgentTool listAgentTool;
+
+
+    public ChatService(MessageRepository messageRepository, ConversationRepository conversationRepository, AgentQueryService agentQueryService, ReplyGeneretor replyGeneretor, AgentRouter agentRouter, FiscalAgentTool fiscalAgentTool, RegisterAgentTool registerAgentTool, TermAgentTool termAgentTool, FinancialCalculationsAgentTool financialCalculationsAgentTool, ExchangeAgentTool exchangeAgentTool, ConferenceAgentTool conferenceAgentTool, ListAgentTool listAgentTool) {
         this.messageRepository = messageRepository;
         this.conversationRepository = conversationRepository;
         this.agentQueryService = agentQueryService;
         this.agentRouter = agentRouter;
         this.replyGeneretor = replyGeneretor;
+        this.fiscalAgentTool = fiscalAgentTool;
+        this.registerAgentTool = registerAgentTool;
+        this.termAgentTool = termAgentTool;
+        this.financialCalculationsAgentTool = financialCalculationsAgentTool;
+        this.exchangeAgentTool = exchangeAgentTool;
+        this.conferenceAgentTool = conferenceAgentTool;
+        this.listAgentTool = listAgentTool;
     }
 
 
@@ -176,12 +194,19 @@ public class ChatService {
     }
 
 
-//    Object seachTool(long agentId){
-//        switch (agentId){
-//            case 17L:
-//                return
-//        }
-//    }
+    Object searchTool(long agentId){
+        return switch ((int) agentId) {
+            case 17 -> fiscalAgentTool;
+            case 18 -> registerAgentTool;
+            case 19 -> exchangeAgentTool;
+            case 20 -> financialCalculationsAgentTool;
+            case 21 -> termAgentTool;
+            case 22 -> conferenceAgentTool;
+            case 11 -> listAgentTool;
+            default -> null;
+        };
+    }
+
 
     public SseEmitter orquestratorMessage(long id, SendMessageRequest sendMessageRequest, long userId, MultipartFile media) {
 
@@ -201,7 +226,7 @@ public class ChatService {
 
         List<Message> last5Message = lastMessages(message.getConversationId(), 5);
 
-        String promptAgents = listAllAgent(agentQueryService.searchAll());
+        String promptAgents = listAllAgent(agentQueryService.findAllPublicAndActivate());
 
         String promptFiveMessage = promptLastMessage(last5Message);
 
@@ -213,7 +238,6 @@ public class ChatService {
 
         Usage usageRouterResponse = agentRouterResponse.getMetadata().getUsage();
 
-
         int inputTokens = usageRouterResponse.getPromptTokens();
 
         int outputTokens = usageRouterResponse.getCompletionTokens();
@@ -222,33 +246,31 @@ public class ChatService {
 
         Agent chosenAgent = agentQueryService.searchUnique(agentRouterId);
 
-
+        Object agentTool = searchTool(agentRouterId);
 
         StringBuilder fullText = new StringBuilder();
         AtomicReference<Usage> lastUsage = new AtomicReference<>();
 
-        // TODO adicionar para aqui ele enviar a media
 
-
-            Media file = null;
-            if(media != null && !media.isEmpty()){
-                try {
-                    byte[] head = Arrays.copyOf(media.getBytes(), (int) Math.min(8, media.getSize()));
-                    log.info("Upload received: name={} size={} contentType={} header={}",
-                            media.getOriginalFilename(), media.getSize(), media.getContentType(),
-                            new String(head, java.nio.charset.StandardCharsets.ISO_8859_1));
-                    file = new Media(MimeTypeUtils.parseMimeType(media.getContentType()),
-                            new ByteArrayResource(media.getBytes()));
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+        Media file = null;
+        if(media != null && !media.isEmpty()){
+            try {
+                byte[] head = Arrays.copyOf(media.getBytes(), (int) Math.min(8, media.getSize()));
+                log.info("Upload received: name={} size={} contentType={} header={}",
+                        media.getOriginalFilename(), media.getSize(), media.getContentType(),
+                        new String(head, java.nio.charset.StandardCharsets.ISO_8859_1));
+                file = new Media(MimeTypeUtils.parseMimeType(media.getContentType()),
+                        new ByteArrayResource(media.getBytes()));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
+        }
 
         List<org.springframework.ai.chat.messages.Message> toAiMessage = toAiMessages(last5Message, file);
 
         SseEmitter emitter = new SseEmitter(120_000L);
 
-        replyGeneretor.finalMessage(chosenAgent, toAiMessage)
+        replyGeneretor.finalMessage(chosenAgent, toAiMessage, agentTool, userId)
                 .doOnNext(chunk -> {
                     // o usage normalmente só vem preenchido nos últimos chunks
                     if (chunk.getMetadata() != null && chunk.getMetadata().getUsage() != null) {

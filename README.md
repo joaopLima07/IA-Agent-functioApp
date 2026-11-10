@@ -6,7 +6,7 @@
 
 API em Java 21 + Spring Boot da plataforma SaaS B2B AI Nexus, em que empresas configuram e conversam com agentes de IA especializados. Este repositório contém apenas o backend; o frontend fica no [repositório do frontend](https://github.com/joaopLima07/IA-AgentWebApp), e o [repositório central](https://github.com/joaopLima07/IA-Agent) reúne a visão geral do projeto. O frontend publicado fica em https://witty-coast-0d3519b10.5.azurestaticapps.net.
 
-**Estado:** autenticação (refresh token e recuperação de senha por e-mail), agentes (listar, ver e editar), conversas (listar, abrir, carregar mensagens antigas, criar, renomear, arquivar, desarquivar e excluir), envio de mensagens com resposta em streaming (roteador de agentes + Gemini) e painel de métricas prontos. Ferramentas, fontes de conhecimento e permissões dos agentes ainda não existem.
+**Estado:** autenticação (refresh token e recuperação de senha por e-mail), agentes (listar, ver e editar), conversas (listar, abrir, carregar mensagens antigas, criar, renomear, arquivar, desarquivar e excluir), envio de mensagens com resposta em streaming (roteador de agentes + Gemini) e painel de métricas prontos. O envio de arquivos no chat e as ferramentas do agente fiscal (lançar e consultar notas fiscais) existem; as ferramentas dos demais agentes, as fontes de conhecimento e as permissões dos agentes ainda não.
 
 ## O que existe
 
@@ -16,6 +16,8 @@ API em Java 21 + Spring Boot da plataforma SaaS B2B AI Nexus, em que empresas co
 - Listagem, detalhe e edição de agentes, com controle otimista de concorrência.
 - Conversas por usuário: listagem, detalhe com as últimas 30 mensagens, paginação de mensagens antigas, criação, renomeação, arquivamento e exclusão. O usuário vem sempre do JWT, e uma conversa de outro usuário responde como inexistente.
 - Envio de mensagem com resposta em streaming (SSE). O `ChatService` salva a mensagem do usuário, um agente roteador (Gemini) escolhe qual agente responde, o agente escolhido gera a resposta aos poucos, e ela é salva com tokens de entrada, tokens de saída e latência.
+- Envio de arquivo junto com a mensagem (`pdf`, `png`, `jpg`, `jpeg`, `pptx`, `docx`), que o agente lê como mídia do Gemini.
+- Tool calling: cada agente é ligado a uma classe de tools (ver [Ferramentas dos agentes](#ferramentas-dos-agentes)). O agente fiscal lança e consulta notas fiscais.
 - Painel de métricas globais (todas as conversas): totais, conversas criadas por dia, tokens por dia, uso por agente e tempo de resposta.
 - Política de senha, validação de telefone (`libphonenumber`) e senha com BCrypt.
 - Documentação OpenAPI (Swagger UI).
@@ -27,17 +29,13 @@ Java 21, Spring Boot 4.1.1 (Web MVC, Data JPA, Validation, OAuth2 Resource Serve
 
 ## Como rodar
 
-Pré-requisitos: JDK 21 e um PostgreSQL acessível (a conexão usa `sslmode=require`).
+Pré-requisitos: JDK 21 e um PostgreSQL acessível (a conexão usa `sslmode=require`). Em produção o banco é o Postgres do Supabase.
 
 Nenhum perfil vem ativo por padrão: o que está em `application.properties` é a configuração de produção. Para rodar localmente, ative o perfil `dev` (`SPRING_PROFILES_ACTIVE=dev`) e defina as variáveis de ambiente:
 
 | Variável         | Descrição                                                                                  |
 |------------------|--------------------------------------------------------------------------------------------|
-| `HOST`           | Host do PostgreSQL.                                                                        |
-| `PORT`           | Porta do PostgreSQL.                                                                       |
-| `DATABASE`       | Nome do banco.                                                                             |
-| `USER`           | Usuário do banco.                                                                          |
-| `PASSWORD`       | Senha do banco.                                                                            |
+| `DATABASE_URL`   | URL JDBC completa, com usuário e senha (ver exemplo abaixo).                               |
 | `JWT`            | Segredo usado para assinar os tokens (HS256). Mínimo de 32 bytes, senão a aplicação não sobe. |
 | `MAIL_USERNAME`  | Conta Gmail que envia o código de recuperação de senha.                                    |
 | `MAIL_PASSWORD`  | Senha de app dessa conta (não a senha normal).                                             |
@@ -46,8 +44,7 @@ Nenhum perfil vem ativo por padrão: o que está em `application.properties` é 
 Todas são obrigatórias: se uma faltar, a aplicação não sobe e o log aponta o placeholder não resolvido (por exemplo, `Could not resolve placeholder 'JWT'`). O SMTP usa `smtp.gmail.com:587` com STARTTLS; troque `spring.mail.host` e `spring.mail.port` para outro provedor.
 
 ```powershell
-$env:HOST = "localhost"; $env:PORT = "5432"; $env:DATABASE = "ai_saas"
-$env:USER = "usuario"; $env:PASSWORD = "sua-senha"
+$env:DATABASE_URL = "jdbc:postgresql://localhost:5432/ai_saas?user=usuario&password=sua-senha&sslmode=require"
 $env:JWT = "um-segredo-com-pelo-menos-32-caracteres"
 $env:MAIL_USERNAME = "conta@gmail.com"; $env:MAIL_PASSWORD = "senha-de-app"
 $env:GEMINI_API_KEY = "sua-chave"
@@ -55,6 +52,17 @@ $env:SPRING_PROFILES_ACTIVE = "dev"
 $env:REFRESH_TOKEN_COOKIE_SAME_SITE = "Lax"
 ./mvnw spring-boot:run
 ```
+
+**Banco no Supabase.** Use a string do **Session pooler** (botão *Connect* do dashboard), no formato JDBC:
+
+```
+jdbc:postgresql://aws-N-<região>.pooler.supabase.com:5432/postgres?user=postgres.<ref-do-projeto>&password=<senha>&sslmode=require
+```
+
+- A conexão direta (`db.<ref>.supabase.co`) só tem IPv6; em redes só com IPv4 ela falha com `UnknownHostException`. O pooler tem IPv4.
+- A string `postgresql://...` do Supabase não funciona no Spring: precisa do prefixo `jdbc:` e de `user=`/`password=` como parâmetros. Caracteres especiais da senha (`@`, `&`, `#`, `?`, `%`, espaço) precisam de percent-encoding.
+- O session pooler aceita no máximo 15 clientes simultâneos, então o pool do Hikari é limitado (`spring.datasource.hikari.maximum-pool-size=5`). Se aparecer `EMAXCONNSESSION`, feche outras instâncias do app e clientes SQL.
+- A produção **não** altera o schema. Ao mudar uma entidade, rode o `ALTER TABLE` correspondente no Supabase (ver [Tabela `nota_fiscal`](#tabela-nota_fiscal)).
 
 Na IDE, defina as mesmas variáveis na configuração de execução (no IntelliJ: *Run > Edit Configurations > Environment variables*).
 
@@ -74,7 +82,29 @@ A API sobe na porta `8080` e o Swagger UI fica em `http://localhost:8080/swagger
 ### Dados que o chat espera no banco
 
 - **Agente roteador:** é o agente de `id = 10` (`AgentRepository.findAgentDecision`). Ele recebe as últimas 5 mensagens e a lista de agentes e deve responder só com o `id` do agente que atende. Sem esse agente, nenhuma mensagem é respondida.
-- **Agentes candidatos:** só os agentes com visibilidade `PUBLIC` entram na escolha do roteador.
+- **Agentes candidatos:** só os agentes com visibilidade `PUBLIC` e status `ACTIVE` entram na escolha do roteador.
+- **Agentes com tools:** o `ChatService` liga o agente escolhido à classe de tools pelo **id**: `17` Fiscal, `18` Cadastro, `19` Câmbio, `20` Cálculos financeiros, `21` Prazos, `22` Conferência e `11` Lista de agentes. Agente com outro id responde sem tools.
+
+### Tabela `nota_fiscal`
+
+A entidade `Invoice` usa a tabela `nota_fiscal`. Como o schema de produção não é atualizado automaticamente, a tabela precisa ter, além das colunas básicas (`id`, `user_id`, `numero`, `serie`, `tipo`, `status`, `cliente_nome`, `cliente_documento`, `email_destinatario`, `descricao`, `observacao`, `valor_total`, `valor_impostos`, `data_emissao`, `data_vencimento`, colunas `campo_pendente`/`valor_pendente`/`pendente_expira_em`, colunas `ultima_alteracao_*`, `created_at`, `updated_at`, `version`), as colunas de impostos:
+
+```sql
+ALTER TABLE nota_fiscal
+  ADD COLUMN IF NOT EXISTS valor_icms   numeric(12,2) NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS valor_ipi    numeric(12,2) NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS valor_pis    numeric(12,2) NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS valor_cofins numeric(12,2) NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS valor_iss    numeric(12,2) NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS valor_irrf   numeric(12,2) NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS valor_csll   numeric(12,2) NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS valor_inss   numeric(12,2) NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS valor_ibs    numeric(12,2) NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS valor_cbs    numeric(12,2) NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS valor_is     numeric(12,2) NOT NULL DEFAULT 0;
+```
+
+Sem elas, qualquer consulta à tabela falha com `column "valor_icms" does not exist`.
 
 ## Testes
 
@@ -120,6 +150,7 @@ Todas as rotas abaixo exigem `Authorization: Bearer <accessToken>`, exceto as de
 | POST   | `/api/conversations`                   | Bearer JWT   | Cria uma conversa.             |
 | PATCH  | `/api/conversations/{id}`              | Bearer JWT   | Renomeia a conversa.           |
 | POST   | `/api/conversations/{id}/messages`     | Bearer JWT   | Envia uma mensagem; a resposta chega em streaming (SSE). |
+| POST   | `/api/conversations/{id}/messages` (`multipart/form-data`) | Bearer JWT | Mesma rota, com um arquivo anexo (partes `request` e `file`). |
 | POST   | `/api/conversations/{id}/archive`      | Bearer JWT   | Arquiva a conversa.            |
 | POST   | `/api/conversations/{id}/unarchive`    | Bearer JWT   | Desarquiva a conversa.         |
 | DELETE | `/api/conversations/{id}`              | Bearer JWT   | Exclui a conversa.             |
@@ -299,6 +330,8 @@ O `content` é obrigatório, com até 10.000 caracteres. O fluxo é:
 3. O agente escolhido gera a resposta, enviada aos poucos.
 4. Ao fim, a mensagem do assistente é salva com `agentId`, tokens (os do roteador somados aos da resposta) e `latencyMs`. Se o cliente desconectar no meio, o texto recebido até ali também é salvo.
 
+**Com arquivo:** envie `multipart/form-data` com a parte `request` (JSON, `Content-Type: application/json`, igual ao corpo acima) e a parte `file`. Extensões aceitas: `pdf`, `png`, `jpg`, `jpeg`, `pptx` e `docx`; outra extensão responde `415 UNSUPPORTED_MEDIA`. O arquivo é enviado ao Gemini junto com a última mensagem e não é guardado no banco.
+
 Cada pedaço da resposta chega como um evento `data:` com texto puro (não é JSON). O stream fecha quando a resposta termina. Se algo falhar **durante** o stream, o servidor envia um evento nomeado antes de fechar:
 
 ```
@@ -341,6 +374,8 @@ Os erros seguem o formato `{ "code": "...", "message": "..." }`.
 | 422    | `INVALID_CONFIG`           | Configuração do agente inválida (ex.: temperatura). |
 | 409    | `NO_AGENT`                 | O roteador não devolveu um agente válido.          |
 | 422    | `INVALID`                  | Mensagem inválida (a exceção existe, mas nenhuma regra a dispara ainda). |
+| 415    | `UNSUPPORTED_MEDIA`        | Extensão de arquivo não aceita no envio de mensagem. |
+| 500    | `RUNTIME_ERROR`            | Qualquer outra exceção não tratada no módulo de conversas. |
 | 500    | `TECHNICAL_ERROR`          | O Gemini não respondeu.                            |
 
 Requisições sem token, ou com token inválido ou expirado, recebem `401` do Spring Security. Nas rotas de conversas, um corpo que não passa na validação (título ausente ou maior que 100 caracteres, `content` ausente ou maior que 10.000, `newTitle` vazio) responde `400` sem corpo de erro. Se o roteador devolver o id de um agente que não existe, a resposta é `404` do módulo de agentes, que o módulo de conversas ainda não traduz.
@@ -364,6 +399,20 @@ Requisições sem token, ou com token inválido ou expirado, recebem `401` do Sp
 - **Papel da mensagem (`MessageRole`)**: `USER`, `ASSISTANT`.
 - A mensagem guarda `conversationId`, `role`, `agentId` (nulo nas mensagens do usuário), `content`, `inputToken`, `outputToken`, `totalToken`, `latencyMs` e `createdAt`. Os campos de tokens e latência só são preenchidos nas respostas do agente.
 
+## Ferramentas dos agentes
+
+As tools ficam em `conversation/tools` e são métodos `@Tool` (Spring AI). O `userId` chega pelo `ToolContext`, nunca como parâmetro. O plano completo está em `NextSteps.md`.
+
+| Classe (agente `id`) | Estado | Tools |
+|---|---|---|
+| `FiscalAgentTool` (17) | Implementada | `releasesStatement` (lança nota extraída de um documento), `searchInvoice` (busca por número), `searchPerStatus` (lista por situação: `EMITIDA`, `PENDENTE`, `CANCELADA`) |
+| `ListAgentTool` (11) | Implementada | `listAllAgentsDescriptions` (lista nome e descrição dos agentes) |
+| `RegisterAgentTool` (18), `ExchangeAgentTool` (19), `FinancialCalculationsAgentTool` (20), `TermAgentTool` (21), `ConferenceAgentTool` (22) | Vazias | Planejadas em `NextSteps.md` |
+
+**Lançamento de nota (`releasesStatement`).** O modelo extrai os dados do documento enviado e a tool valida antes de gravar: valor total maior que zero; CNPJ válido (numérico ou alfanumérico, dígitos verificadores); vencimento (opcional) não anterior à emissão; nota `CANCELADA` não é lançada; impostos totais não maiores que o total da nota; soma dos impostos detalhados igual ao total de impostos; e número de nota ainda não cadastrado. Notas do tipo `SERVICO` ou `PRODUTO`, com impostos `ICMS`, `IPI`, `PIS`, `COFINS`, `ISS`, `IRRF`, `CSLL`, `INSS`, `IBS`, `CBS` e Imposto Seletivo.
+
+**Alteração com confirmação.** A entidade `Invoice` já tem o fluxo `proposeChange` → `confirmChange` (pendência que expira; só `DESCRICAO`, `EMAIL_DESTINATARIO` e `OBSERVACAO` são editáveis), mas as tools que o expõem ainda não foram criadas.
+
 ## Estrutura
 
 ```
@@ -380,9 +429,10 @@ src/main/java/br/com/aisaas
 │   └── infra/        AgentRepository
 ├── conversation/
 │   ├── api/          ConversationController, handler de erros e DTOs
-│   ├── application/  ChatService (orquestração e SSE), AgentRouter, ReplyGeneretor, serviços de consulta e comando
-│   ├── domain/       entidades Conversation e Message, enums e exceções
-│   └── infra/        ConversationRepository e MessageRepository
+│   ├── application/  ChatService (orquestração, SSE e arquivos), AgentRouter, ReplyGeneretor, serviços de consulta e comando
+│   ├── domain/       entidades Conversation, Message e Invoice (nota fiscal), enums e exceções
+│   ├── infra/        ConversationRepository, MessageRepository e FiscalAgentRepository
+│   └── tools/        classes de tools dos agentes (Fiscal, Lista, Cadastro, Câmbio, Cálculos, Prazos, Conferência)
 ├── panel/
 │   ├── api/          PanelController e DTOs das métricas
 │   ├── application/  PanelService
@@ -392,5 +442,7 @@ src/main/java/br/com/aisaas
 
 ## Próximos passos
 
-- Ferramentas dos agentes.
+- Ferramentas dos demais agentes (Cadastro, Câmbio, Cálculos financeiros, Prazos, Conferência) e as tools de alteração de nota com confirmação.
+- Agente fiscal: filtrar `searchInvoice`, `searchPerStatus` e a checagem de duplicidade por usuário, e devolver ao modelo um resumo em vez da entidade `Invoice`.
+- Fontes de conhecimento e permissões dos agentes.
 - Painel: taxa de resolução e resultados de chamadas de ferramentas (dependem de definir o que é "resolvida" e de existir tool calling).
