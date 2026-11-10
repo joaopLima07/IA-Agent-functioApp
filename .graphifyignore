@@ -1,0 +1,8 @@
+# Skills de terceiros instaladas (Supabase) — não fazem parte do código do projeto
+.agents/
+.claude/
+skills-lock.json
+
+# Build e saída do próprio graphify
+target/
+graphify-out/
