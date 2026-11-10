@@ -8,10 +8,10 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 @Component
-public class AllTools {
+public class ListAgentTool {
     private final AgentQueryService agentQueryService;
 
-    public AllTools(AgentQueryService agentQueryService) {
+    public ListAgentTool(AgentQueryService agentQueryService) {
         this.agentQueryService = agentQueryService;
     }
 

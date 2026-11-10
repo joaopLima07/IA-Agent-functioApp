@@ -3,7 +3,7 @@ package br.com.aisaas.conversation.application;
 
 import br.com.aisaas.agent.domain.Agent;
 import br.com.aisaas.conversation.domain.exceptions.GeminiAPINotRespondException;
-import br.com.aisaas.conversation.tools.AllTools;
+import br.com.aisaas.conversation.tools.ListAgentTool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
 import java.util.List;
+import java.util.Map;
 // TODO
 // Para o chat devolver imagem, há dois caminhos:
 // 1. Imagem por URL (o mais simples): uma tool, como a AllTools, gera ou busca a imagem, sobe para um armazenamento
@@ -26,14 +27,12 @@ import java.util.List;
 public class ReplyGeneretor {
     private static final Logger log = LoggerFactory.getLogger(ReplyGeneretor.class);
     private final ChatClient chatClient;
-    private final AllTools allTools;
 
-    public ReplyGeneretor(ChatModel chatModel, AllTools allTools) {
+    public ReplyGeneretor(ChatModel chatModel, ListAgentTool listAgentTool) {
         this.chatClient = ChatClient.create(chatModel);
-        this.allTools = allTools;
     }
 
-    public Flux<ChatResponse> finalMessage(Agent agentRouter, List<org.springframework.ai.chat.messages.Message> fiveLastMessage){
+    public Flux<ChatResponse> finalMessage(Agent agentRouter, List<org.springframework.ai.chat.messages.Message> fiveLastMessage, Object agentTool, long userId){
 
         log.info("Gemini request: agent={} model={} temperature={} maxOutputTokens={} messages={}",
                 agentRouter.getId(), agentRouter.getModelName(), agentRouter.getTemperature(), agentRouter.getMaxTokens(),
@@ -46,7 +45,8 @@ public class ReplyGeneretor {
                         .maxOutputTokens(agentRouter.getMaxTokens()))
                 .system(agentRouter.getSystemPrompt())
                 .messages(fiveLastMessage)
-                .tools(allTools)
+                .tools(agentTool)
+                .toolContext(Map.of("userId", userId))
                 .stream()
                 .chatResponse()
                 .onErrorMap(e -> new GeminiAPINotRespondException(e.getMessage(), e));

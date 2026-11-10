@@ -10,6 +10,9 @@ public interface AgentRepository extends JpaRepository<Agent, Long> {
     @Query("select a from Agent a where a.visibility = 'PUBLIC'")
     public List<Agent> findAllAgentPublic();
 
+    @Query("select a from Agent a where a.visibility = 'PUBLIC' and a.status = 'ACTIVE'")
+    public List<Agent> findAllAgentPublicAndActive();
+
     @Query("select a from Agent a where a.id = 10")
     public Agent findAgentDecision();
 }

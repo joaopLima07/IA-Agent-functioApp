@@ -25,6 +25,10 @@ public class AgentQueryService {
         return agentRepository.findAllAgentPublic();
     }
 
+    public List<Agent> findAllPublicAndActivate(){
+        return agentRepository.findAllAgentPublicAndActive();
+    }
+
     public Agent findRouterAgent(){
         return agentRepository.findAgentDecision();
     }

@@ -10,6 +10,7 @@ import br.com.aisaas.conversation.domain.exceptions.ConversationNotFoundExceptio
 import br.com.aisaas.conversation.domain.exceptions.InvalidRouterResponseException;
 import br.com.aisaas.conversation.infra.ConversationRepository;
 import br.com.aisaas.conversation.infra.MessageRepository;
+import br.com.aisaas.conversation.tools.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -42,6 +43,8 @@ class ChatServiceTest {
     private AgentQueryService agentQueryService;
     private AgentRouter agentRouter;
     private ReplyGeneretor replyGeneretor;
+    private FiscalAgentTool fiscalAgentTool;
+    private ListAgentTool listAgentTool;
     private ChatService service;
 
     @BeforeEach
@@ -51,7 +54,12 @@ class ChatServiceTest {
         agentQueryService = mock(AgentQueryService.class);
         agentRouter = mock(AgentRouter.class);
         replyGeneretor = mock(ReplyGeneretor.class);
-        service = new ChatService(messageRepository, conversationRepository, agentQueryService, replyGeneretor, agentRouter);
+        fiscalAgentTool = mock(FiscalAgentTool.class);
+        listAgentTool = mock(ListAgentTool.class);
+        service = new ChatService(messageRepository, conversationRepository, agentQueryService, replyGeneretor, agentRouter,
+                fiscalAgentTool, mock(RegisterAgentTool.class), mock(TermAgentTool.class),
+                mock(FinancialCalculationsAgentTool.class), mock(ExchangeAgentTool.class),
+                mock(ConferenceAgentTool.class), listAgentTool);
     }
 
     private Message message(MessageRole role, String content, LocalDateTime createdAt) {
@@ -199,7 +207,7 @@ class ChatServiceTest {
         when(agentQueryService.searchUnique(2L)).thenReturn(chosenAgent);
         when(agentRouter.choseAgent(any(), anyString(), anyString()))
                 .thenReturn(chunk("2", new DefaultUsage(10, 5, 15)));
-        when(replyGeneretor.finalMessage(any(), any())).thenReturn(Flux.just(
+        when(replyGeneretor.finalMessage(any(), any(), any())).thenReturn(Flux.just(
                 chunk("Hello, ", null),
                 chunk("world", new DefaultUsage(20, 10, 30))));
 
@@ -240,12 +248,23 @@ class ChatServiceTest {
         when(agentQueryService.searchUnique(2L)).thenReturn(chosenAgent);
         when(agentRouter.choseAgent(any(), anyString(), anyString()))
                 .thenReturn(chunk("2", new DefaultUsage(10, 5, 15)));
-        when(replyGeneretor.finalMessage(any(), any())).thenReturn(Flux.error(new RuntimeException("gemini down")));
+        when(replyGeneretor.finalMessage(any(), any(), any())).thenReturn(Flux.error(new RuntimeException("gemini down")));
 
         service.orquestratorMessage(1L, new SendMessageRequest("hi"), 7L, null);
 
         // only the user message is saved; give the async stream time to fail before checking
         verify(messageRepository, timeout(1000).times(1)).save(any(Message.class));
         verify(messageRepository, after(500).times(1)).save(any(Message.class));
+    }
+
+    @Test
+    void searchToolReturnsTheToolOfTheAgent() {
+        assertSame(fiscalAgentTool, service.searchTool(17L));
+        assertSame(listAgentTool, service.searchTool(11L));
+    }
+
+    @Test
+    void searchToolReturnsNullForAnAgentWithoutTool() {
+        assertNull(service.searchTool(2L));
     }
 }
