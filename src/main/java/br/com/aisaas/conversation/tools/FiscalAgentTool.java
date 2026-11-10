@@ -7,15 +7,12 @@ import br.com.aisaas.conversation.domain.exceptions.*;
 import br.com.aisaas.conversation.infra.FiscalAgentRepository;
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
-import com.networknt.schema.OutputFormat;
 import jakarta.validation.constraints.PositiveOrZero;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
-import org.springframework.security.util.MethodInvocationUtils;
 import org.springframework.stereotype.Component;
 
-import javax.swing.text.html.Option;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;

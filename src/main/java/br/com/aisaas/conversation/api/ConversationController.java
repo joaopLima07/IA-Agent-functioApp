@@ -8,7 +8,6 @@ import br.com.aisaas.conversation.domain.Conversation;
 import br.com.aisaas.conversation.domain.ConversationStatus;
 import br.com.aisaas.conversation.domain.Message;
 import jakarta.validation.Valid;
-import org.springframework.ai.content.Media;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;

@@ -207,7 +207,7 @@ class ChatServiceTest {
         when(agentQueryService.searchUnique(2L)).thenReturn(chosenAgent);
         when(agentRouter.choseAgent(any(), anyString(), anyString()))
                 .thenReturn(chunk("2", new DefaultUsage(10, 5, 15)));
-        when(replyGeneretor.finalMessage(any(), any(), any())).thenReturn(Flux.just(
+        when(replyGeneretor.finalMessage(any(), any(), any(), anyLong())).thenReturn(Flux.just(
                 chunk("Hello, ", null),
                 chunk("world", new DefaultUsage(20, 10, 30))));
 
@@ -248,7 +248,7 @@ class ChatServiceTest {
         when(agentQueryService.searchUnique(2L)).thenReturn(chosenAgent);
         when(agentRouter.choseAgent(any(), anyString(), anyString()))
                 .thenReturn(chunk("2", new DefaultUsage(10, 5, 15)));
-        when(replyGeneretor.finalMessage(any(), any(), any())).thenReturn(Flux.error(new RuntimeException("gemini down")));
+        when(replyGeneretor.finalMessage(any(), any(), any(), anyLong())).thenReturn(Flux.error(new RuntimeException("gemini down")));
 
         service.orquestratorMessage(1L, new SendMessageRequest("hi"), 7L, null);
 

@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import br.com.aisaas.shared.api.dto.ErrorResponse;
 
-import java.io.IOException;
 
 @RestControllerAdvice(assignableTypes = ConversationController.class)
 public class ConversationControllerAdvice {
