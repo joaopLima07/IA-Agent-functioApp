@@ -38,15 +38,20 @@ public class ReplyGeneretor {
                 agentRouter.getId(), agentRouter.getModelName(), agentRouter.getTemperature(), agentRouter.getMaxTokens(),
                 fiveLastMessage.stream().map(ReplyGeneretor::describe).toList());
 
-        return chatClient.prompt()
+        ChatClient.ChatClientRequestSpec prompt = chatClient.prompt()
                 .options(GoogleGenAiChatOptions.builder()
                         .model(agentRouter.getModelName())
                         .temperature(agentRouter.getTemperature())
                         .maxOutputTokens(agentRouter.getMaxTokens()))
                 .system(agentRouter.getSystemPrompt())
                 .messages(fiveLastMessage)
-                .tools(agentTool)
-                .toolContext(Map.of("userId", userId))
+                .toolContext(Map.of("userId", userId));
+
+        if (agentTool != null) {
+            prompt = prompt.tools(agentTool);
+        }
+
+        return prompt
                 .stream()
                 .chatResponse()
                 .onErrorMap(e -> new GeminiAPINotRespondException(e.getMessage(), e));

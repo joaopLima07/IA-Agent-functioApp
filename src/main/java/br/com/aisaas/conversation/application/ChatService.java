@@ -331,9 +331,5 @@ public class ChatService {
 
         return emitter;
 
-        // Primeiro subir apenas os Agents de IA sem utilizar o tool caling e alterando dados do banco
-        // depois tentar adicionar para chamar o toolCalling
-
-
     }
 }
